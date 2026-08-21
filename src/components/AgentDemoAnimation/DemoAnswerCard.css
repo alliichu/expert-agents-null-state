@@ -1,0 +1,131 @@
+/**
+ * Answer card — Figma node `1455:67445`. 380 wide, radius 16, 16px padding, 16px gap.
+ *
+ * Height is content-driven and deliberately variable — see DemoAnswerCard.tsx.
+ */
+
+.answer-card {
+  position: relative;
+  inline-size: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border-radius: 16px;
+
+  /**
+   * Glass, matching the switcher chip — Figma `1455:67445` is the same
+   * `Icon/Square/Light` component at card scale.
+   *
+   * Note the gradient transform here is a PURE 90deg rotation (magnitude 1), unlike the
+   * previous white card whose transform scaled by 0.471 and pushed its ramp past the box.
+   * So these stops map straight onto 0%–100% with no extension — worth checking rather
+   * than assuming, since the two cards look alike in the file.
+   */
+  background-image: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.25) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  /* Figma BACKGROUND_BLUR radius is 4.068; CSS backdrop-filter takes half that. */
+  backdrop-filter: blur(2.034px);
+  /* Figma sets this shadow to LINEAR_BURN, which CSS box-shadow cannot express.
+     At 4% black the difference is imperceptible; noted rather than approximated. */
+  box-shadow: 0 9.762px 12.203px -4.881px rgba(0, 0, 0, 0.04);
+}
+
+/**
+ * ⚠️ NO STROKE, deliberately (Allison, 8/20: "in both of these glass cards can we remove the
+ * stroke"). The node carries one — a white 0.6 -> 0.2 gradient, aligned OUTSIDE — and it used
+ * to be reproduced here as a masked `::before` ring, because CSS `border` takes no gradient
+ * while honouring `border-radius`. That ring is gone; the card's edge is now carried by its
+ * fill gradient and backdrop blur alone.
+ *
+ * If it ever comes back: draw it INSIDE (`inset: 0`), not outset. The animated slot needs
+ * `overflow: hidden` to reveal the card's height, and that clipped the outer edge of an outset
+ * ring on all four sides. The same masked-ring technique is still live on the composer input
+ * and the V1 switcher chip if you need a working example.
+ */
+
+.answer-card__text {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 14px;
+  font-weight: var(--pine-font-weight-regular);
+  line-height: 1.425;
+  /* White on glass — the previous solid-white card had this at #343332. */
+  color: var(--pine-color-white, #fff);
+}
+
+.answer-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* The block Figma names `pds-alert` — but it is media + title + meta + button, which
+   pds-alert cannot express, so it is built from primitives. */
+/* Also stroke-less as of 8/20 — the frame draws a 1px #d2d1d1 border, and on a white card
+   over the aura it was reading as a hard grey line along the bottom and right edges. White
+   on translucent purple has more than enough separation without it. */
+.answer-card__product {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-block-end: 12px;
+  border-radius: 10px;
+  background-color: var(--pine-color-background-container, #fff);
+  overflow: hidden;
+}
+
+.answer-card__media {
+  block-size: 112px;
+  background-color: #d5d5d5;
+  border-radius: 10px 10px 0 0;
+}
+
+.answer-card__product-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-inline: 16px;
+}
+
+.answer-card__product-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.answer-card__product-title {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 14px;
+  font-weight: var(--pine-font-weight-semi-bold);
+  line-height: 1.425;
+  color: var(--pine-color-text-strong, #1a1a19);
+}
+
+.answer-card__product-meta {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 13px;
+  font-weight: var(--pine-font-weight-regular);
+  line-height: 1.425;
+  color: var(--pine-color-text-readonly, #6c6a69);
+}
+
+.answer-card__cta {
+  align-self: flex-start;
+}
+
+/* Right-aligned, 12px icons, 8px apart, 8px in from the card's inner edge. */
+.answer-card__feedback {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+  padding-inline-end: 8px;
+  /* Figma lightens these to #bbbab9 on glass (they are #6c6a69 on the white card). */
+  color: #bbbab9;
+}

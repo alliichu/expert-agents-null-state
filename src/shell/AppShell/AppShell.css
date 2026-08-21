@@ -1,0 +1,13 @@
+/**
+ * Content well. Prod's wrapper is
+ * `<div class="content activate-bar-content appframe-withsidebar">` in
+ * app/views/layouts/admin/base.html.erb; the offsets are the topbar height and
+ * sidebar width declared in _sleek_sidebar.scss / _variables.scss.
+ */
+
+.app-content {
+  margin-block-start: var(--sidebar-offset);
+  margin-inline-start: var(--sidebar-width);
+  min-height: calc(100vh - var(--sidebar-offset));
+  background: var(--pine-color-background-app);
+}

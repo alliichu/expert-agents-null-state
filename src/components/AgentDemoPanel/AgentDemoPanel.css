@@ -1,0 +1,234 @@
+/**
+ * Media panel — Figma node `1406:64136`.
+ *   520 × 600, radius var(--pine-dimension-200) = 16px, overflow clipped,
+ *   switcher pinned bottom-centre with 24px padding.
+ */
+
+.agent-demo {
+  position: relative;
+  inline-size: 520px;
+  block-size: 600px;
+  border-radius: var(--pine-dimension-200); /* 16px */
+  background-color: #f1f0ef; /* Figma `--neutral/200`; not a Pine token */
+  overflow: hidden;
+}
+
+/**
+ * Animation stage.
+ *
+ * Background is the frame's own artwork, exported already-composited from node
+ * `1406:64335` — gradient, both veils and the blurred aura in one layer. Reproducing
+ * that stack in CSS would mean re-deriving a -82deg rotation, a -1 Y scale, a 137px
+ * blur and a soft-light blend; exporting the composite is exact and simpler.
+ *
+ * Downscaled to 130px wide (16KB). The source is blurred by 137px, so it holds no
+ * detail a 4x upscale can lose — the full-resolution export is a 6.7MB JPEG for the
+ * same pixels. Kept as a file rather than a data URI so it stays swappable.
+ *
+ * This is still the placeholder: the cycling agent animation replaces it.
+ */
+.agent-demo__stage {
+  position: absolute;
+  /* Figma bakes the panel's 16px rounded clip into the export and fills outside it
+     with the app background (#f8f8f8) — sampled at the corner pixels. Inside this
+     container's own rounded clip that shows up as four pale corner wedges.
+     Outsetting by 20px pushes the baked corners outside the visible box. The artwork
+     is blurred by 137px, so losing 20px off each edge is imperceptible. */
+  inset: -20px;
+  background-image: url('./assets/agent-panel-aura.png');
+  background-size: cover;
+  background-position: center;
+}
+
+/* Figma `1436:67068`: flex row, 8px gap, centred, 24px padding. Moved to the TOP of the
+   panel (Allison, 8/20) — the frame draws them flush to the bottom. */
+.agent-demo__tabs {
+  position: absolute;
+  inset-block-start: 0;
+  inset-inline-start: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 24px;
+}
+
+/* --------------------------------------------------------------------------
+   Switcher — Figma `1436:67068`.
+
+   The frame draws two different elements: a glass chip for the active tab and a real
+   `pds-button size="micro" variant="tertiary"` for the inactive one. Both tabs are
+   rendered as that button here, with ONE chip sliding between them — swapping element
+   types on click leaves nothing continuous to animate, so it reads as a hard cut.
+   Every static state still matches the frame exactly.
+
+   Pine ships no glass or on-dark treatment, so the chip is hand-built. Its values are
+   the frame's, fractional ones included — they come from the chip having been scaled
+   off another artboard, and are reproduced rather than rounded.
+-------------------------------------------------------------------------- */
+
+.agent-tab-chip {
+  /**
+   * Height carries the pill's block padding, because the pill is what you see — it is
+   * centred on the tab, so the space between the label's line box and the pill's edge is
+   * `(block-size − label) / 2`. 6px above and below (Allison, 8/20); the frame draws 25px
+   * total, which was 3.5.
+   *
+   * 18px is the label's line box: Pine's micro button is 24px tall, less its 2px block
+   * padding each side and its 1px border each side. The button's own padding is invisible
+   * here — the pill is drawn outside it — so this is the only lever that matters.
+   */
+  --chip-block-size: calc(18px + 2 * 6px);
+
+  position: absolute;
+  inset-inline-start: 0;
+  inset-block-start: 50%;
+  z-index: 0;
+  block-size: var(--chip-block-size);
+  margin-block-start: calc(var(--chip-block-size) / -2); /* centred without a 2nd transform */
+  border-radius: 14.643px;
+  background-image: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.3) 0%,
+    rgba(255, 255, 255, 0.05) 100%
+  );
+  /* Figma sets this shadow to LINEAR_BURN, which CSS box-shadow cannot express.
+     At 4% black the difference is imperceptible; noted rather than approximated. */
+  box-shadow: 0 9.762px 12.203px -4.881px rgba(0, 0, 0, 0.04);
+  /* Figma BACKGROUND_BLUR radius is 4.068; CSS backdrop-filter takes half that. */
+  backdrop-filter: blur(2.034px);
+  pointer-events: none;
+
+  /* `width` is not compositor-friendly, but the two tabs differ in width and scaleX
+     would distort the 14.643px radius. At this size it is the correct trade. */
+  transition:
+    transform 260ms var(--motion-ease-out),
+    width 260ms var(--motion-ease-out);
+}
+
+/**
+ * The chip's stroke is a GRADIENT — white 0.6 at the top fading to 0.2 at the bottom —
+ * not the flat rgba(255,255,255,0.6) the design-context reference reports. A uniformly
+ * bright ring is what made it read wrong.
+ *
+ * CSS `border` cannot take a gradient and still follow `border-radius`, and
+ * `border-image` ignores radius entirely. So the ring is a masked pseudo-element:
+ * outset by the stroke weight (Figma aligns the stroke OUTSIDE), filled with the
+ * gradient, then masked to just the 0.61px band.
+ */
+.agent-tab-chip::before {
+  content: '';
+  position: absolute;
+  inset: -0.61px;
+  border-radius: 15.253px; /* 14.643 + 0.61, so the ring stays concentric */
+  padding: 0.61px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.6) 0%,
+    rgba(255, 255, 255, 0.2) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.agent-demo__tabs pds-button.agent-tab {
+  position: relative;
+  z-index: 1;
+  flex: none;
+}
+
+/* Figma asks for 4px between icon and label; Pine's button content gaps at
+   --pine-dimension-xs (8px). `button-content` is an exposed part, so this is a supported
+   override rather than reaching into the shadow DOM — but the shadow rule sets `gap`
+   directly and wins over a plain ::part declaration, so it needs !important.
+   kajabi-products does the same in _top_bar.scss for the same reason. */
+.agent-demo__tabs pds-button.agent-tab::part(button-content) {
+  gap: var(--pine-dimension-050) !important; /* 4px */
+}
+
+/* Pine's tertiary text colour is for light surfaces; this is the on-dark equivalent.
+   The frame renders BOTH labels white, so only the chip marks the active tab. */
+.agent-demo__tabs pds-button.agent-tab::part(button) {
+  color: var(--pine-color-white, #fff);
+  white-space: nowrap;
+  transition: color 160ms var(--motion-ease-out);
+}
+
+/**
+ * Hover: text only, no container.
+ *
+ * Pine's tertiary sets `--pds-button-color-background-hover` and `-border-hover` to
+ * `--pine-color-background-muted`, so `.pds-button:hover` paints a light grey pill —
+ * wrong on a dark panel, and not the designed behaviour. Those custom properties are
+ * declared on the button INSIDE the shadow root, so setting them on the host does
+ * nothing; `::part(button)` is the only lever, hence the direct declarations.
+ * The active tab is excluded — it already reads as selected.
+ */
+.agent-demo__tabs pds-button.agent-tab:not(.agent-tab--active)::part(button):hover {
+  background-color: transparent;
+  border-color: transparent;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.agent-demo__tabs pds-button.agent-tab.agent-tab--active::part(button):hover {
+  background-color: transparent;
+  border-color: transparent;
+}
+
+/* --------------------------------------------------------------------------
+   Switcher, `text` variant — Figma `1474:68298`.
+
+   No chip: the active tab is white, the inactive one is white at 50%, and that opacity
+   step is the ONLY thing marking the selection. The node is the same `Icon/Square/Light`
+   component as the chip variant with its gradient fill and stroke set to `visible: false`
+   (its 14.643 radius is still there, unused), scaled up one type step — 14px/500 labels
+   and 16px icons in a 28px tall tab.
+
+   `size="small"` is the closer Pine size here: it already ships 14px at weight 500, which
+   is exactly the frame's Inter Medium 14. Only its box needs correcting — Pine pads small
+   at 3px/16px inside a 32px min-height, the frame draws 4px/12px in 28px.
+
+   Not reproduced: the node keeps its LINEAR_BURN drop shadow and 4.068 background blur
+   switched on, but with no fill behind them they'd paint a faint hard-edged rectangle over
+   a smooth gradient. They are leftovers from the chip variant, not part of this treatment.
+-------------------------------------------------------------------------- */
+
+.agent-demo__tabs--text pds-button.agent-tab::part(button) {
+  min-height: var(--pine-dimension-350); /* 28px — Pine small is 32 */
+
+  /* 4/12, less the border, which is Pine's own idiom for `small` (it writes
+     `calc(var(--pine-dimension-2xs) - var(--pine-border-width))`). The border is
+     transparent on a tertiary button but still takes layout, so declaring a flat 4px
+     rendered the tab 30px tall instead of the frame's 28 — and 2px wider than the node. */
+  padding: calc(var(--pine-dimension-050) - var(--pine-border-width))
+    calc(var(--pine-dimension-150) - var(--pine-border-width));
+}
+
+/* The icon is a slotted pds-icon and paints in currentColor, so one declaration moves the
+   label and the icon together — which is what the frame does (both white @0.5). */
+.agent-demo__tabs--text pds-button.agent-tab:not(.agent-tab--active)::part(button) {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Hover lifts the inactive tab part-way to selected rather than all the way, so hovering
+   never reads as having switched. */
+.agent-demo__tabs--text pds-button.agent-tab:not(.agent-tab--active)::part(button):hover {
+  background-color: transparent;
+  border-color: transparent;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .agent-tab-chip,
+  .agent-demo__tabs pds-button.agent-tab::part(button) {
+    transition: none;
+  }
+}

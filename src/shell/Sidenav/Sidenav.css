@@ -1,0 +1,151 @@
+/**
+ * Sidenav — values transcribed from kajabi-products, not eyeballed.
+ *
+ *   app/assets/stylesheets/ladera/core/_variables.scss     $sidebar-width: 250px
+ *   app/assets/stylesheets/ladera/modules/_sleek_sidebar.scss  .sleek-sidebar, --sidebar-offset: 64px
+ *   app/assets/stylesheets/components/app_frame/_sidenav.scss  .appframe-sidenav (link parts)
+ *   app/assets/stylesheets/_sage_shims.scss                .sage-sidebar__body padding
+ *
+ * Sage spacing referenced above resolves via node_modules/@kajabi/sage-assets
+ * lib/stylesheets/tokens/_spacing.scss → xs: 8px, sm: 16px.
+ */
+
+:root {
+  --sidebar-width: 250px;
+  --sidebar-offset: 64px;
+}
+
+/* _sleek_sidebar.scss .sleek-sidebar + _sage_shims.scss sidebar overrides */
+.sleek-sidebar {
+  position: fixed;
+  z-index: 3;
+  inset-block-start: var(--sidebar-offset);
+  inset-inline-start: 0;
+  inline-size: var(--sidebar-width);
+  block-size: calc(100vh - var(--sidebar-offset));
+  display: flex;
+  flex-direction: column;
+  background-color: var(--pine-color-background-container);
+  font-size: 14px;
+  font-weight: var(--pine-font-weight-medium);
+  border-inline-end: 1px solid var(--appframe-color-border);
+}
+
+/* .appframe-sidebar block of _sleek_sidebar.scss */
+.appframe-sidebar {
+  --appframe-color-border: var(--pine-color-background-container-disabled);
+  --appframe-border-radius-link: var(--pine-dimension-100);
+  --appframe-color-background-active: var(--pine-color-background-muted);
+  --appframe-color-background-hover: var(--pine-color-background-container-disabled);
+  --appframe-color-text-active: var(--pine-color-text-active);
+  --appframe-color-text-default: var(--pine-color-text-readonly);
+  --appframe-color-text-hover: var(--pine-color-text);
+  --appframe-font-weight-medium: var(--pine-font-weight-medium);
+  --appframe-spacing-icon: var(--pine-dimension-100);
+  --appframe-spacing-link-padding-block: calc(var(--pine-dimension-150) / 2);
+  --appframe-spacing-link-padding-inline-start: var(--pine-dimension-100);
+  --appframe-spacing-link-padding-inline-end: var(--pine-dimension-050);
+}
+
+/* _sage_shims.scss .sage-sidebar__body — sage-spacing(sm)=16px, (xs)=8px */
+.sage-sidebar__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-inline: 16px;
+  padding-block: 16px 8px;
+}
+
+/* .appframe-sidebar .sage-sidebar__footer */
+.sage-sidebar__footer {
+  flex: 0 0 auto;
+  padding-inline: 16px;
+  padding-block-end: 16px;
+}
+
+.sage-nav__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---------------------------------------------------------------------------
+   app_frame/_sidenav.scss — .appframe-sidenav
+   The ::part(link) rules are duplicated on .appframe-sidebar in prod so the
+   footer links match the body links; same here.
+--------------------------------------------------------------------------- */
+
+.appframe-sidenav pds-link,
+.appframe-sidebar .sage-sidebar__footer pds-link {
+  display: block;
+  border-radius: var(--appframe-border-radius-link);
+  position: relative;
+}
+
+.appframe-sidenav pds-link::part(link),
+.appframe-sidebar .sage-sidebar__footer pds-link::part(link) {
+  display: flex;
+  align-items: center;
+  gap: var(--appframe-spacing-icon);
+  padding-block: var(--appframe-spacing-link-padding-block);
+  padding-inline-start: var(--appframe-spacing-link-padding-inline-start);
+  padding-inline-end: var(--appframe-spacing-link-padding-inline-end);
+  border-radius: var(--appframe-border-radius-link);
+  color: var(--appframe-color-text-default);
+  font-weight: var(--appframe-font-weight-medium);
+}
+
+.appframe-sidenav pds-link::part(link):hover,
+.appframe-sidebar .sage-sidebar__footer pds-link::part(link):hover {
+  background-color: var(--appframe-color-background-hover);
+  color: var(--appframe-color-text-hover);
+  text-decoration: none;
+}
+
+.appframe-sidenav pds-link.active::part(link),
+.appframe-sidebar .sage-sidebar__footer pds-link.active::part(link) {
+  color: var(--pine-color-text-active);
+  font-weight: var(--appframe-font-weight-medium);
+  background-color: var(--appframe-color-background-active);
+}
+
+/* prod: `.sage-sidebar__footer .sage-nav__link { font-weight: 600; margin-inline: 8px }`.
+   Under ux_appframe the footer rows are pds-link, so the weight lands on the part. */
+.appframe-sidebar .sage-sidebar__footer pds-link::part(link) {
+  font-weight: 600;
+}
+
+/* Accordion rows */
+.appframe-sidenav pds-accordion pds-link::part(link) {
+  padding-inline-start: var(--pine-dimension-400);
+  font-weight: var(--pine-font-weight-regular);
+}
+
+.appframe-sidenav pds-accordion.active::part(accordion-button) {
+  color: var(--appframe-color-text-active);
+  font-weight: var(--pine-font-weight-semi-bold);
+}
+
+.appframe-sidenav pds-accordion::part(accordion-body) {
+  padding: var(--pine-dimension-0);
+}
+
+.appframe-sidenav ::part(accordion-button):hover {
+  background-color: var(--appframe-color-background-hover);
+}
+
+.appframe-sidenav pds-accordion[open] pds-icon {
+  color: var(--appframe-color-icon-active, var(--pine-color-text-strong));
+}
+
+/* Beta chip on the Backstage row */
+.appframe-sidenav pds-link .beta-badge {
+  position: absolute;
+  right: 13px;
+}
+
+/* Addresses FOUC — components stay hidden until defined (prod does the same) */
+.appframe-sidenav pds-link:not(:defined),
+.appframe-sidenav pds-accordion:not(:defined) {
+  visibility: hidden;
+}

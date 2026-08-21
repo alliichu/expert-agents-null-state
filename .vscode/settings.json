@@ -1,0 +1,5 @@
+{
+  "html.customData": [
+    "./node_modules/@pine-ds/core/dist/vscode.html-data.json"
+  ]
+}

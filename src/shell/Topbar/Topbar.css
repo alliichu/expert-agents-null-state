@@ -1,0 +1,179 @@
+/**
+ * Topbar — every custom property below is copied from
+ * app/assets/stylesheets/components/app_frame/_top_bar.scss (.appframe-topbar).
+ * Prod writes them in rem() via a Sass helper; the px comments are the resolved value.
+ */
+
+.appframe-topbar {
+  --appframe-border-radius-button: var(--pine-dimension-xs);
+  --appframe-border-radius-user-profile-menu: var(--pine-dimension-100);
+  --appframe-color-background: var(--pine-color-background-container);
+  --appframe-color-border: var(--pine-color-border-subtle);
+  --appframe-color-button-background: var(--pine-color-background-muted);
+  --appframe-color-button-hover: var(--pine-color-background-inset);
+  --appframe-color-button-sparkle: var(--pine-color-purple-600);
+  --appframe-color-icon: var(--pine-color-text-muted);
+  --appframe-font-size-menu: var(--pine-font-size-085);
+  --appframe-font-weight: var(--pine-font-weight-semi-bold);
+  --appframe-sizing-height: 4rem; /* 64px */
+  --appframe-sizing-max-width-site-select-menu: 10.8125rem; /* 173px */
+  --appframe-sizing-min-height-trigger: 2rem; /* 32px */
+  --appframe-sizing-max-width-user-profile-name: 10.125rem; /* 162px */
+  --appframe-spacing-button-padding: var(--pine-dimension-100);
+  --appframe-spacing-button-site-select-padding: calc(var(--pine-dimension-050) / 2);
+  --appframe-spacing-user-dropdown-button-padding: 0 var(--pine-dimension-100) 0
+    calc(var(--pine-dimension-050) / 2);
+  --appframe-spacing-logo-margin-block-end: var(--pine-dimension-100);
+  --appframe-spacing-padding-block: var(--pine-dimension-200);
+  --appframe-spacing-user-profile-name: 0.375rem; /* 6px */
+
+  background-color: var(--appframe-color-background);
+  border-block-end: 1px solid var(--appframe-color-border);
+  height: var(--appframe-sizing-height);
+  inset-inline-start: 0;
+  inset-block-start: 0;
+  padding-inline: var(--appframe-spacing-padding-block);
+  padding-block: 0;
+  position: fixed;
+  width: 100%;
+  z-index: 901;
+}
+
+/* prod sets the flex/gap inline on the element (a KP load-speed workaround);
+   same values, moved into the stylesheet */
+.appframe-topbar__row {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  height: var(--appframe-sizing-height);
+}
+
+.appframe-topbar pds-box {
+  display: flex;
+  align-items: center;
+}
+
+.assistant-bar__breadcrumbs {
+  flex-grow: 1;
+  overflow: hidden;
+}
+
+.appframe-topbar__actions {
+  gap: 0.5rem;
+}
+
+/* --------------------------------------------------------------------------
+   Temp Pine tertiary button styling — copied from the block of the same name
+   at the bottom of _top_bar.scss. The !important flags are prod's.
+-------------------------------------------------------------------------- */
+.appframe-topbar pds-button::part(button),
+.appframe-topbar .copy-magic__conversation-assistant-button pds-button::part(button) {
+  --button-dimension: 32px;
+  background: var(--appframe-color-button-background) !important;
+  border-radius: var(--appframe-border-radius-button);
+  border: none;
+  min-height: auto;
+  padding: var(--appframe-spacing-button-padding);
+  transform: none;
+  height: 32px;
+  line-height: 1;
+}
+
+.appframe-topbar pds-button::part(button):hover {
+  background: var(--appframe-color-button-hover) !important;
+  cursor: pointer;
+}
+
+.appframe-topbar .copy-magic__conversation-assistant-button pds-icon,
+.appframe-topbar .copy-magic__conversation-assistant-button pds-button::part(button) {
+  color: var(--appframe-color-button-sparkle);
+}
+
+/* prod targets ::part(icon), which only exists when the deprecated `icon`
+   attribute is used. The icon is slotted here, so it's coloured directly. */
+.appframe-topbar__modal-trigger pds-icon {
+  color: var(--appframe-color-icon);
+}
+
+.appframe-topbar pds-button::part(button) {
+  min-height: var(--appframe-sizing-min-height-trigger);
+}
+
+/* Site selector */
+.appframe-topbar .site-select-menu__trigger::part(button) {
+  padding: var(--appframe-spacing-button-site-select-padding);
+  width: 100%;
+}
+
+.site-select-menu__inner,
+.user-profile-menu__inner {
+  display: flex;
+  align-items: center;
+}
+
+.site-select-menu__logo {
+  margin-inline-end: var(--appframe-spacing-logo-margin-block-end);
+  flex: none;
+}
+
+.site-select-menu__title {
+  font-size: var(--appframe-font-size-menu);
+  font-weight: var(--appframe-font-weight);
+  color: var(--pine-color-grey-950);
+  max-width: var(--appframe-sizing-max-width-site-select-menu);
+  padding-inline-end: var(--appframe-spacing-button-padding);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* User menu */
+.appframe-topbar .user-profile-menu__trigger::part(button) {
+  padding: var(--appframe-spacing-user-dropdown-button-padding);
+}
+
+.user-profile-menu__avatar {
+  --admin-radius-round: var(--appframe-border-radius-user-profile-menu);
+
+  display: flex;
+}
+
+.appframe-topbar pds-avatar::part(asset-wrapper) {
+  --border-radius-admin-round: var(--appframe-border-radius-user-profile-menu);
+}
+
+.user-profile__name {
+  font-size: var(--appframe-font-size-menu);
+  font-weight: var(--appframe-font-weight);
+  margin: 0;
+  margin-inline-start: var(--appframe-spacing-user-profile-name);
+  max-width: var(--appframe-sizing-max-width-user-profile-name);
+  color: var(--appframe-color-user-profile-name, var(--pine-color-text));
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Breadcrumbs */
+.sage-breadcrumbs {
+  display: flex;
+  align-items: center;
+  gap: var(--pine-dimension-050);
+  width: 100%;
+}
+
+.sage-breadcrumbs__link {
+  color: var(--appframe-color-breadcrumbs-inactive, var(--pine-color-text-secondary));
+  font-size: var(--appframe-font-size-menu);
+  text-decoration: none;
+}
+
+.sage-breadcrumbs__link:hover,
+.sage-breadcrumbs__link:focus,
+.sage-breadcrumbs__link--current {
+  color: var(--appframe-color-breadcrumbs-active, var(--pine-color-text-strong));
+}
+
+.sage-breadcrumbs__divider {
+  color: var(--pine-color-border);
+}

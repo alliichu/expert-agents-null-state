@@ -1,0 +1,156 @@
+/**
+ * Message box — Figma node `1437:67161`. Values read from the node.
+ *
+ * 380x48, x=70 within the 520-wide panel. Its vertical position is not fixed: the rig moves
+ * the whole stack per state (see AgentDemoAnimation.tsx), so nothing here sets a y.
+ */
+
+/* Wrapper — Figma `1467:67625`: 380 wide, vertical, 12px gap. */
+.demo-composer {
+  inline-size: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Visitor attribution — Figma `1467:67626`: 24 tall, horizontal, 8px gap, centred. */
+.demo-composer__attribution {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  block-size: 24px;
+}
+
+.demo-composer__avatar {
+  flex: none;
+  display: block;
+  inline-size: 24px;
+  block-size: 24px;
+  border-radius: 9999px;
+  overflow: hidden;
+  background-color: var(--pine-color-white, #fff);
+  /* Figma aligns the 1px white @45% stroke OUTSIDE; box-shadow gives an outside ring
+     without affecting layout, which a border would. */
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.45);
+}
+
+.demo-composer__avatar img {
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.demo-composer__meta {
+  display: flex;
+  align-items: center;
+  font-family: var(--pine-font-family-inter);
+  font-size: 12px;
+  line-height: 1.25;
+  white-space: nowrap;
+}
+
+.demo-composer__visitor {
+  font-weight: var(--pine-font-weight-semi-bold);
+  color: var(--pine-color-white, #fff);
+}
+
+/* `pre` keeps the padding spaces around the separator that the frame's string carries. */
+.demo-composer__context {
+  font-weight: var(--pine-font-weight-regular);
+  color: rgba(255, 255, 255, 0.7);
+  white-space: pre;
+}
+
+/* Input — Figma `1437:67161`. */
+.demo-composer__input {
+  /* `relative` only so the gradient-stroke ring can position against it. */
+  position: relative;
+  inline-size: 100%;
+  block-size: 48px;
+
+  display: flex;
+  align-items: center;
+  gap: 8.75px;
+  padding: 8px 8px 8px 16px;
+  /* Fully rounded (Allison, 8/20) — the frame draws 16px. The ::before stroke ring
+     uses `border-radius: inherit`, so it follows without a second change. */
+  border-radius: 9999px;
+
+  /**
+   * Fill is a gradient, and its ramp extends WELL PAST the box — that is the whole
+   * character of it. Figma's stops read 0.404 and 1.0, but `gradientTransform` scales
+   * the gradient space by 0.604, so in object space they land at 0.404/0.604 = 66.9%
+   * and 1/0.604 = 165.5%. Only the first third of the ramp is inside the box, so the
+   * right edge bottoms out around alpha 0.66 instead of going transparent.
+   *
+   * Confirmed by sampling the alpha channel of an isolated export of the node:
+   * flat 1.0 through ~66%, then a linear fall to ~0.68 at the right edge.
+   *
+   * Reading the stops alone (fade 40.4% -> 0 by 100%) makes it dissolve far too early.
+   */
+  background-image: linear-gradient(90deg, #fff 66.9%, rgba(255, 255, 255, 0) 165.5%);
+  pointer-events: none;
+}
+
+/**
+ * Stroke is ALSO a gradient — #e4e4e4 fading to transparent at ~172deg — so it can't be
+ * a plain border (CSS borders take no gradient while honouring border-radius). Masked
+ * ring, same technique as the switcher chip, but inset 0 because Figma aligns this
+ * stroke INSIDE, so it must not grow the 380x48 box.
+ */
+.demo-composer__input::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.094px;
+  background: linear-gradient(172.33deg, #e4e4e4 0%, rgba(228, 228, 228, 0) 100%);
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.demo-composer__field {
+  flex: 1;
+  min-inline-size: 0;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  white-space: nowrap;
+  font-family: var(--pine-font-family-inter);
+  font-size: 14px;
+  line-height: 1.425;
+}
+
+/* Solid — no blink. It marks the insertion point and trails the typed text. */
+.demo-composer__caret {
+  flex: none;
+  font-weight: var(--pine-font-weight-semi-bold);
+  color: #2563eb;
+}
+
+.demo-composer__placeholder,
+.demo-composer__typed {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-weight: var(--pine-font-weight-regular);
+}
+
+.demo-composer__placeholder {
+  color: #828180;
+}
+
+.demo-composer__typed {
+  color: var(--pine-color-text-strong, #1a1a19);
+}
+
+.demo-composer__send {
+  flex: none;
+}

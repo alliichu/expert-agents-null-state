@@ -1,0 +1,30 @@
+/* Global base — mirrors kajabi-products admin defaults */
+
+/* Motion tokens — same curves as the role-permissions prototype, so the two feel
+   related. Browser default easings are too weak for deliberate UI motion. */
+:root {
+  --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --motion-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+}
+
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', -apple-system, system-ui, 'BlinkMacSystemFont', 'Segoe UI', 'Roboto',
+    'Ubuntu', sans-serif;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--pine-color-text, #343332);
+  background: var(--pine-color-background-app, #f8f8f8);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}

@@ -1,0 +1,155 @@
+/**
+ * Every value here is read off Figma node `1406:64096` (get_design_context), not
+ * approximated. Pine token names are used wherever Figma resolved one; the px
+ * comment is the value that token resolves to, kept for reviewers.
+ */
+
+/* Hero sits 188px below the topbar inside the 1190px content well, and the well
+   centres a 1004px column (1190 − 1004 = 186, i.e. 93px each side). */
+.null-state {
+  display: flex;
+  justify-content: center;
+  padding-block-start: 188px;
+}
+
+.null-state__hero {
+  display: flex;
+  align-items: center; /* the copy column is shorter than the 600 hero, so it centres */
+  gap: 64px;
+  inline-size: 1004px;
+  block-size: 600px;
+}
+
+/* ---------------------------------------------------------------- copy column */
+
+.null-state__copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 32px;
+  inline-size: 420px;
+}
+
+.null-state__heading-block {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pine-dimension-100); /* 8px */
+  inline-size: 100%;
+}
+
+/* Figma type style `typography/heading/2` */
+.null-state__headline {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 26px;
+  font-weight: var(--pine-font-weight-semi-bold);
+  line-height: 1.25;
+  letter-spacing: -0.5px;
+  color: var(--pine-color-grey-950); /* #1a1a19 */
+}
+
+/* Figma type style `typography/body/@`.
+   Colour is Figma's `color/text/readonly` (Allison, 8/20) — was grey-800 #4d4d4c. */
+.null-state__body {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 14px;
+  font-weight: var(--pine-font-weight-regular);
+  line-height: 1.425;
+  color: var(--pine-color-text-readonly);
+}
+
+/* ------------------------------------------------------------------- values */
+
+.null-state__values {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  inline-size: 100%;
+}
+
+/* 4px between a value's title and its description (Allison, 8/20). The Figma frame
+   has them flush, which made the values block 208 tall; with the gap it's 220. */
+.null-state__value {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pine-dimension-050); /* 4px */
+}
+
+/* Figma type style `typography/body/semi-bold` */
+.null-state__value-heading {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 14px;
+  font-weight: var(--pine-font-weight-semi-bold);
+  line-height: 1.425;
+  color: var(--pine-color-grey-950); /* #1a1a19 — Figma token `color/text/label/@` */
+  white-space: nowrap;
+}
+
+/* Figma type style `Body/body-md/regular` — note the explicit 20px line-height and
+   -0.16px tracking, which differ from the body style above. */
+.null-state__value-description {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 14px;
+  font-weight: var(--pine-font-weight-regular);
+  line-height: 20px;
+  letter-spacing: -0.16px;
+  color: var(--pine-color-text-readonly); /* Figma `color/text/readonly` */
+}
+
+.null-state__actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* ------------------------------------------------------------------ pricing */
+
+/**
+ * Real pds-alert in `small` mode. Its container colours, 10px radius and border all
+ * already match the Figma; what needed correcting was the type scale and the padding.
+ *
+ * Custom properties inherit THROUGH the shadow boundary, which is how the padding
+ * token and text colour reach `.pds-alert__container` without a `part`. The one thing
+ * that needs a real shadow rule is the asymmetric padding — see the component.
+ */
+.null-state__pricing {
+  inline-size: 100%;
+}
+
+/* Slotted content is light DOM, so it styles normally. `small` puts it inside a
+   truncating pds-text, hence the white-space reset. */
+.null-state__pricing-copy {
+  display: flex;
+  flex-direction: column;
+  white-space: normal;
+  overflow: visible;
+}
+
+/* 14px semi-bold — the same style as the value-prop headings above. */
+.null-state__pricing-heading {
+  font-size: var(--pine-font-size-body-md); /* 14px */
+  font-weight: var(--pine-font-weight-semi-bold);
+  line-height: 1.425;
+  color: var(--pine-color-text-strong); /* #1a1a19 */
+}
+
+/* Figma specifies 13px. Pine's scale steps 14px (body-md) → 12px (body-sm) with no
+   13px token, so this is a literal — worth raising with design systems. */
+.null-state__pricing-body {
+  font-size: 13px;
+  font-weight: var(--pine-font-weight-regular);
+  line-height: 1.425;
+  color: var(--pine-color-text-secondary); /* #4d4d4c */
+}
+
+/* 12px (Allison, 8/20) — the frame's link is 14px, matching the heading; dropped a step so
+   the link sits under the pricing copy in hierarchy rather than level with the heading. */
+.null-state__pricing-link::part(link) {
+  font-size: var(--pine-font-size-body-sm); /* 12px */
+  font-weight: var(--pine-font-weight-semi-bold);
+  color: var(--pine-color-text-strong);
+  text-decoration: none;
+}

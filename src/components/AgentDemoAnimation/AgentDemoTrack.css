@@ -1,0 +1,34 @@
+/**
+ * The sliding agent switch — Figma `1483:68475`. Geometry is inline on the elements (lane
+ * pitch, track offset); only the pacing comes through custom properties, published by the
+ * component from timing.ts.
+ */
+
+.ask-track {
+  position: absolute;
+  inset: 0;
+  /* decorative, like the animation it carries — the switcher above it must stay clickable
+     even where a lane covers the whole panel */
+  pointer-events: none;
+  transition: transform var(--switch-duration) var(--switch-ease);
+}
+
+/**
+ * A lane is a copy of the PANEL's box, not just the composer's: 520 × 600, offset by the
+ * lane pitch. That is what lets the animation inside keep its own 70px inline inset and its
+ * vertical centring untouched — it cannot tell a lane from the panel.
+ *
+ * Lanes outside the panel are clipped by `.agent-demo`'s `overflow: hidden`, so the outgoing
+ * content disappears at the panel's edge rather than over the copy column.
+ */
+.ask-track__lane {
+  position: absolute;
+  inset-block: 0;
+  inline-size: 100%;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask-track {
+    transition: none;
+  }
+}

@@ -1,0 +1,100 @@
+/**
+ * Figma `1466:67614`. The chip's fill and stroke are switched off in the design, so
+ * only the geometry, the backdrop blur and the contents survive.
+ */
+
+.demo-thinking {
+  /* Flow child of the slot. Left-aligned with the composer and the answer card (Allison,
+     8/20); the frame indents it 10px, which read as sitting too far right. The chip's own
+     4px left padding is pulled back so the ICON edge lines up, not the invisible box —
+     the chip has no visible fill, so its padding would otherwise look like a gap. */
+  display: inline-flex;
+  align-items: center;
+  margin-inline-start: -4px;
+  padding: 4px 12px 4px 4px;
+  border-radius: 14.643px;
+  /* Figma BACKGROUND_BLUR radius is 4.068; CSS backdrop-filter takes half that. */
+  backdrop-filter: blur(2.034px);
+
+  /* rest: not yet asked, or already answered */
+  opacity: 0;
+  transform: translateY(4px);
+  transition:
+    opacity var(--seq-thinking-fade) var(--seq-ease-out),
+    transform var(--seq-thinking-fade) var(--seq-ease-out);
+}
+
+.demo-thinking--in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/**
+ * The shimmer. Previously this was `background-clip: text` on the label, which by
+ * definition can only sweep glyphs — an SVG icon has no text to clip to. An animated
+ * MASK does the same job on anything, so the sweep now crosses the icon and the label
+ * as one continuous motion rather than two that happen to share a duration.
+ */
+.demo-thinking__sweep {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
+  -webkit-mask-image: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.45) 0%,
+    rgba(0, 0, 0, 0.45) 35%,
+    #000 50%,
+    rgba(0, 0, 0, 0.45) 65%,
+    rgba(0, 0, 0, 0.45) 100%
+  );
+  mask-image: linear-gradient(
+    90deg,
+    rgba(0, 0, 0, 0.45) 0%,
+    rgba(0, 0, 0, 0.45) 35%,
+    #000 50%,
+    rgba(0, 0, 0, 0.45) 65%,
+    rgba(0, 0, 0, 0.45) 100%
+  );
+  -webkit-mask-size: 260% 100%;
+  mask-size: 260% 100%;
+
+  /* A third of the thinking phase, so it sweeps exactly three times. The wrapper is remounted
+     when the chip becomes visible, so the cycles start with the phase rather than
+     landing wherever a free-running loop happens to be. */
+  animation: demo-thinking-shimmer var(--seq-thinking-shimmer, 1000ms) linear infinite;
+}
+
+@keyframes demo-thinking-shimmer {
+  from {
+    -webkit-mask-position: 130% 0;
+    mask-position: 130% 0;
+  }
+  to {
+    -webkit-mask-position: -30% 0;
+    mask-position: -30% 0;
+  }
+}
+
+.demo-thinking__icon {
+  flex: none;
+  color: var(--pine-color-white, #fff);
+}
+
+/* Figma type style `typography/body-sm/medium` */
+.demo-thinking__label {
+  font-family: var(--pine-font-family-inter);
+  font-size: 12px;
+  font-weight: var(--pine-font-weight-medium);
+  line-height: 1.425;
+  white-space: nowrap;
+  color: var(--pine-color-white, #fff);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .demo-thinking__sweep {
+    animation: none;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+}

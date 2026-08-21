@@ -1,0 +1,128 @@
+/**
+ * Motion for the demo loop. Durations and curves come in as custom properties the rig
+ * writes from timing.ts — nothing here hard-codes a number that controls pacing.
+ */
+
+.ask-demo {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+/**
+ * The stack's vertical position comes from the rig, which sets `inset-block-start` per
+ * state: centred while collapsed and thinking (Figma `1467:67619` / `1466:67563`), pinned
+ * to y=102 once the card is open (Figma `1455:67300`). The open state is 25px BELOW the
+ * centred position, so it can't be derived — see EXPANDED_TOP in AgentDemoAnimation.tsx.
+ *
+ * It transitions on the same duration and curve as the slot's height, and both change in
+ * the same render, so the composer's rise and the card's growth read as one motion.
+ *
+ * Note this is centred in the CARD, not in the space below the switcher — the tabs overlay
+ * the panel rather than displacing the content, and centring below them pushed the stack
+ * ~36px low and read bottom-heavy.
+ */
+.ask-demo__stack {
+  position: absolute;
+  inset-inline-start: 70px;
+  inline-size: 380px;
+  /* always written inline by the rig — declared only so the element never falls back to
+     `auto` block positioning if that ever stops being true */
+  inset-block-start: 0;
+  display: flex;
+  flex-direction: column;
+
+  transition: inset-block-start var(--seq-answer-in) var(--seq-ease-entrance);
+}
+
+/**
+ * Height is set explicitly by the rig from whichever layer is active, so it can be
+ * transitioned. Both layers live inside it, absolutely positioned, so neither fights
+ * over the height and they can overlap during the hand-off.
+ */
+.ask-demo__slot {
+  position: relative;
+  overflow: hidden;
+
+  /**
+   * The clip box is grown 20px past the content on the sides and bottom so the answer
+   * card's drop shadow isn't shaved, then pulled back out of the layout with negative
+   * margins — `overflow: hidden` is still needed to reveal the card's height, and it
+   * clips everything, shadow included. The matching 20px is added to the inline height
+   * by the rig (SHADOW_ROOM).
+   */
+  margin-inline: -20px;
+  inline-size: calc(100% + 40px);
+  margin-block-end: -20px;
+
+  transition: height var(--seq-answer-in) var(--seq-ease-entrance);
+}
+
+.ask-demo__layer {
+  position: absolute;
+  /* composer-to-content gaps come from the rig — the frames set a different one for the
+     thinking label (12) than for the card (16) */
+  inset-block-start: var(--ask-gap-thinking);
+  /* offset by the clip-box padding above, so content still sits on the stack's edges */
+  inset-inline: 20px;
+}
+
+/**
+ * The card cross-fades with the thinking label rather than replacing it. The blur is
+ * what makes it read as "resolving" rather than sliding — it clears as the card settles.
+ */
+.ask-demo__layer--card {
+  inset-block-start: var(--ask-gap-card);
+  opacity: 0;
+  transform: translateY(10px);
+  filter: blur(6px);
+  transition:
+    opacity var(--seq-answer-fade) var(--seq-ease-entrance),
+    transform var(--seq-answer-fade) var(--seq-ease-entrance),
+    filter var(--seq-answer-fade) var(--seq-ease-entrance);
+}
+
+.ask-demo__layer--card.ask-demo__layer--in {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+/**
+ * Closing is its own motion, not the opening played backwards. It runs on the collapse
+ * curve (eased in and out) rather than the entrance curve, which front-loads its travel
+ * and reads as a snap on the way out, and it takes the longer `--seq-exit` so the card
+ * lets go gradually while the prompt backspaces.
+ */
+.ask-demo[data-phase='exit'] .ask-demo__slot,
+.ask-demo[data-phase='gap'] .ask-demo__slot {
+  transition: height var(--seq-exit) var(--seq-ease-collapse);
+}
+
+/* the stack settles back to centre on the same curve the card collapses on */
+.ask-demo[data-phase='exit'] .ask-demo__stack,
+.ask-demo[data-phase='gap'] .ask-demo__stack {
+  transition: inset-block-start var(--seq-exit) var(--seq-ease-collapse);
+}
+
+/**
+ * The card's fade is NOT the collapse's length: it runs on `--seq-exit-fade`, which is
+ * shorter, at a constant rate. The collapse curve eased out of its end and left a long tail
+ * at low opacity with the blur smearing it — see EASING.exitFade in timing.ts for why this
+ * one is `linear`. The height keeps closing on its own after the card has gone.
+ */
+.ask-demo[data-phase='exit'] .ask-demo__layer--card,
+.ask-demo[data-phase='gap'] .ask-demo__layer--card {
+  transition:
+    opacity var(--seq-exit-fade) var(--seq-ease-exit-fade),
+    transform var(--seq-exit-fade) var(--seq-ease-exit-fade),
+    filter var(--seq-exit-fade) var(--seq-ease-exit-fade);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ask-demo *,
+  .ask-demo *::before,
+  .ask-demo *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
