@@ -17,7 +17,18 @@ interface SequenceState {
  * its content (typing is per-character) and so switching agent types can cut in
  * cleanly mid-loop without unwinding anything.
  */
-export function useAskSequence(exchanges: DemoExchange[], enabled: boolean): SequenceState {
+export function useAskSequence(
+  exchanges: DemoExchange[],
+  enabled: boolean,
+  onCycleEnd?: () => void
+): SequenceState {
+  /**
+   * Held in a ref, deliberately: putting the callback in the effect's dependency list would
+   * restart the whole loop whenever the parent re-rendered with a new closure.
+   */
+  const onCycleEndRef = useRef(onCycleEnd);
+  onCycleEndRef.current = onCycleEnd;
+
   const [phase, setPhase] = useState<Phase>('typing');
   const [index, setIndex] = useState(0);
   const [typed, setTyped] = useState('');
@@ -72,6 +83,18 @@ export function useAskSequence(exchanges: DemoExchange[], enabled: boolean): Seq
       if (cancelled) return;
       const current = phaseRef.current;
       const next = PHASE_SEQUENCE[(PHASE_SEQUENCE.indexOf(current) + 1) % PHASE_SEQUENCE.length];
+
+      /**
+       * Leaving `exit` on the last exchange = the final card has just finished collapsing,
+       * so the tab has nothing left to show. Report it and let the panel hand over.
+       *
+       * Fired here rather than after `gap` on purpose: the slide takes `switchMs`, which is
+       * the same 400ms the gap would have been, so the handoff occupies the beat the empty
+       * composer would have — the loop's cadence does not change.
+       */
+      if (current === 'exit' && indexRef.current === exchanges.length - 1) {
+        onCycleEndRef.current?.();
+      }
 
       if (next === 'typing') {
         indexRef.current = (indexRef.current + 1) % exchanges.length;

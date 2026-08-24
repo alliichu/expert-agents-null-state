@@ -1,15 +1,19 @@
+import { useEffect, useState } from 'react';
 import { PdsButton, PdsIcon } from '@pine-ds/react';
 import { arrowUp } from '@pine-ds/icons/icons';
-import { DEMO_VISITORS } from '../../data/nullStateContent';
-// Exported from the node's IMAGE fill at 3x (78px for a 24px avatar) so it stays crisp.
-import visitorAvatar from './assets/visitor-avatar.png';
+import type { DemoVisitor } from '../../data/demoPrompts';
+import { TIMING } from './timing';
 import './DemoComposer.css';
 
 interface DemoComposerProps {
   /** what has been "typed" so far; empty shows the placeholder */
   typed?: string;
-  /** whose question this is — the visitor row differs per agent (see DEMO_VISITORS) */
-  agent: string;
+  /**
+   * Whose question this is. Keyed PER EXCHANGE, not per agent: each exchange is a
+   * different business, so one fixed asker across all three would read as one
+   * confused account.
+   */
+  visitor: DemoVisitor;
 }
 
 /**
@@ -26,14 +30,31 @@ interface DemoComposerProps {
  *   context      12px Inter Regular, white @70%
  *   input        380 x 48 — see below for its two gradients
  */
-export function DemoComposer({ typed = '', agent }: DemoComposerProps) {
-  const visitor = DEMO_VISITORS[agent] ?? DEMO_VISITORS.sales;
+export function DemoComposer({ typed = '', visitor: incoming }: DemoComposerProps) {
+
+  /**
+   * The row that is actually painted, held in state so the swap can be hidden.
+   *
+   * The parent hands over the next asker the moment the collapse begins; this holds the
+   * change back until `visitorSwapMs` into it, so it lands while the card is folding away
+   * and the prompt is backspacing. No fade — the row stays at full opacity throughout and
+   * the larger movement does the hiding.
+   *
+   * Compared by value, not identity — the parent recomputes the object every render.
+   */
+  const [visitor, setVisitor] = useState(incoming);
+
+  useEffect(() => {
+    if (incoming.name === visitor.name && incoming.context === visitor.context) return;
+    const t = window.setTimeout(() => setVisitor(incoming), TIMING.visitorSwapMs);
+    return () => window.clearTimeout(t);
+  }, [incoming, visitor]);
 
   return (
     <div className="demo-composer">
       <div className="demo-composer__attribution">
         <span className="demo-composer__avatar">
-          <img src={visitorAvatar} alt="" width={24} height={24} />
+          <img src={visitor.avatar} alt="" width={24} height={24} />
         </span>
         <span className="demo-composer__meta">
           <span className="demo-composer__visitor">{visitor.name}</span>

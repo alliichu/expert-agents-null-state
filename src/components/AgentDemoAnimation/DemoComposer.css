@@ -14,6 +14,8 @@
 }
 
 /* Visitor attribution — Figma `1467:67626`: 24 tall, horizontal, 8px gap, centred. */
+/* The row is CONSTANT — never fades, never moves, present in every state. Only the
+   label inside it changes, and only its own opacity dips (see below). */
 .demo-composer__attribution {
   display: flex;
   align-items: center;
@@ -41,6 +43,9 @@
   display: block;
 }
 
+/* Who the row names changes once per exchange, timed to land inside the answer card's
+   collapse (`visitorSwapMs` in timing.ts). Deliberately NO opacity or transform here: the
+   row holds full opacity at all times and the collapse does the hiding. */
 .demo-composer__meta {
   display: flex;
   align-items: center;
@@ -94,18 +99,39 @@
 }
 
 /**
- * Stroke is ALSO a gradient — #e4e4e4 fading to transparent at ~172deg — so it can't be
- * a plain border (CSS borders take no gradient while honouring border-radius). Masked
- * ring, same technique as the switcher chip, but inset 0 because Figma aligns this
- * stroke INSIDE, so it must not grow the 380x48 box.
+ * Stroke is ALSO a gradient — #e4e4e4 fading to transparent — so it can't be a plain
+ * border (CSS borders take no gradient while honouring border-radius). Masked ring, same
+ * technique as the switcher chip. Inset -1px because this stroke aligns OUTSIDE, so it
+ * draws around the 380x48 box rather than inside it.
+ *
+ * Retargeted 8/24 to `1500:4082` — the composer as drawn in the built frames — from
+ * `1437:67161`, the original panel design. Three differences: weight 1 not 1.094, OUTSIDE
+ * not INSIDE, and a completely different gradient axis.
+ *
+ * 🔴 The axis is the part worth reading. Figma's gradient space is normalized to the BOX,
+ * not to pixels, so on a 380x48 pill the vertical component is amplified ~7.9x. The
+ * transform's direction vector is (0.916, 0.121), which LOOKS near-horizontal, but per
+ * pixel it is (0.916/380, 0.121/48) — 46.3 degrees. Reading the matrix as an angle without
+ * dividing by the box dimensions gives ~7.5 degrees and is wrong.
+ * Convention checked against the FILL above, whose values are already known: stops
+ * 0.404/1.0 with scale 0.604 land at 66.9%/165.5% horizontal. Same maths, right answer.
+ *
+ * Stops sit at 26.3% and 122.8% of the 297px CSS gradient line, and the paint's own 0.5
+ * opacity is baked into the alphas. Corner alphas that follow: 0.50 down the whole left
+ * edge (both corners clamp below stop 0), 0.18 top-right, 0.12 bottom-right — strongest
+ * on the left, fading out toward the bottom-right.
  */
 .demo-composer__input::before {
   content: '';
   position: absolute;
-  inset: 0;
+  inset: -1px;
   border-radius: inherit;
-  padding: 1.094px;
-  background: linear-gradient(172.33deg, #e4e4e4 0%, rgba(228, 228, 228, 0) 100%);
+  padding: 1px;
+  background: linear-gradient(
+    136.26deg,
+    rgba(228, 228, 228, 0.5) 26.3%,
+    rgba(228, 228, 228, 0) 122.8%
+  );
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);

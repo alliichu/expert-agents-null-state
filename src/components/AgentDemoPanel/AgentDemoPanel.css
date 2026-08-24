@@ -102,9 +102,12 @@
 
   /* `width` is not compositor-friendly, but the two tabs differ in width and scaleX
      would distort the 14.643px radius. At this size it is the correct trade. */
+  /* Matches the content track exactly — same duration, same curve, both from
+     timing.ts via the panel root. The fallbacks only apply if the chip is ever
+     rendered outside `.agent-demo`. */
   transition:
-    transform 260ms var(--motion-ease-out),
-    width 260ms var(--motion-ease-out);
+    transform var(--switch-duration, 520ms) var(--switch-ease, cubic-bezier(0.4, 0, 0.2, 1)),
+    width var(--switch-duration, 520ms) var(--switch-ease, cubic-bezier(0.4, 0, 0.2, 1));
 }
 
 /**
@@ -181,49 +184,6 @@
 .agent-demo__tabs pds-button.agent-tab.agent-tab--active::part(button):hover {
   background-color: transparent;
   border-color: transparent;
-}
-
-/* --------------------------------------------------------------------------
-   Switcher, `text` variant — Figma `1474:68298`.
-
-   No chip: the active tab is white, the inactive one is white at 50%, and that opacity
-   step is the ONLY thing marking the selection. The node is the same `Icon/Square/Light`
-   component as the chip variant with its gradient fill and stroke set to `visible: false`
-   (its 14.643 radius is still there, unused), scaled up one type step — 14px/500 labels
-   and 16px icons in a 28px tall tab.
-
-   `size="small"` is the closer Pine size here: it already ships 14px at weight 500, which
-   is exactly the frame's Inter Medium 14. Only its box needs correcting — Pine pads small
-   at 3px/16px inside a 32px min-height, the frame draws 4px/12px in 28px.
-
-   Not reproduced: the node keeps its LINEAR_BURN drop shadow and 4.068 background blur
-   switched on, but with no fill behind them they'd paint a faint hard-edged rectangle over
-   a smooth gradient. They are leftovers from the chip variant, not part of this treatment.
--------------------------------------------------------------------------- */
-
-.agent-demo__tabs--text pds-button.agent-tab::part(button) {
-  min-height: var(--pine-dimension-350); /* 28px — Pine small is 32 */
-
-  /* 4/12, less the border, which is Pine's own idiom for `small` (it writes
-     `calc(var(--pine-dimension-2xs) - var(--pine-border-width))`). The border is
-     transparent on a tertiary button but still takes layout, so declaring a flat 4px
-     rendered the tab 30px tall instead of the frame's 28 — and 2px wider than the node. */
-  padding: calc(var(--pine-dimension-050) - var(--pine-border-width))
-    calc(var(--pine-dimension-150) - var(--pine-border-width));
-}
-
-/* The icon is a slotted pds-icon and paints in currentColor, so one declaration moves the
-   label and the icon together — which is what the frame does (both white @0.5). */
-.agent-demo__tabs--text pds-button.agent-tab:not(.agent-tab--active)::part(button) {
-  color: rgba(255, 255, 255, 0.5);
-}
-
-/* Hover lifts the inactive tab part-way to selected rather than all the way, so hovering
-   never reads as having switched. */
-.agent-demo__tabs--text pds-button.agent-tab:not(.agent-tab--active)::part(button):hover {
-  background-color: transparent;
-  border-color: transparent;
-  color: rgba(255, 255, 255, 0.8);
 }
 
 @media (prefers-reduced-motion: reduce) {

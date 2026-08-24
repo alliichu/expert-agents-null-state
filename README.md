@@ -140,7 +140,7 @@ Geometry read off `1406:64096` via `get_design_context`, then measured in-browse
 
 | | Figma | Rendered |
 |---|---|---|
-| hero | 1004 × 600, centred in the 1190px well | 1004 × 600 ✓ |
+| hero | 1004 × 600, centred in the 1190px well | 1004 × 600 ✓, centred on **both** axes — see below |
 | copy column | 420 wide, 32px stack gaps | 420 ✓, gaps 8 / 32 / 32 ✓ |
 | gap to media | 64 | 64 ✓ |
 | media panel | 520 × 600, 16px radius | 520 × 600 ✓ |
@@ -148,7 +148,7 @@ Geometry read off `1406:64096` via `get_design_context`, then measured in-browse
 | body | 14px regular, 1.425 lh, #4d4d4c | ✓ (h 59.8 vs 60) |
 | values block | 208 tall, 24px gaps | 219.8 — see below |
 | value description | 14px, **20px** lh, **−0.16px** tracking | ✓ |
-| pricing strip | 420 × 63, 16/12 padding, 10px radius | 420 × 64.5 ✓ |
+| pricing strip | 420 × 63, 16/12 padding, 10px radius | 420 × 71.9 — restyled off a reference 8/21, see below |
 | CTA | 166 × 36 | 167 × 36 |
 | tabs group (V1 chip) | 279 × 73, centred, 24px padding | 311 × 73 ✓ centred, flush — see below |
 | active chip (V1) | 93 × 25 | 112.5 × 25 — see below |
@@ -175,15 +175,76 @@ which is why every V2 row lands within ~1px.
   made the values block 208 tall; with the gap it's 220.
 - **Subhead and value descriptions use `color/text/readonly`** (`--pine-color-text-readonly`,
   #6c6a69) instead of the frame's grey-800 #4d4d4c.
+- **The CTA carries a trailing caret** (8/21). The frame's button (`1406:64134`) is label-only.
+  Pine has **no `chevronRight`** — that shape is `caretRight` in its set, the same icon the
+  sidenav's disclosure arrows use. Slotted into `slot="end"`, sized explicitly at 16px because
+  Pine styles a slotted `pds-icon` for colour only, never size. Button goes 167 → 191 wide, 36
+  tall unchanged, Pine's own 8px content gap.
+- **The hero is centred vertically by computation, not by a fixed offset** (Allison, 8/21 —
+  *"it feels a little like it's more to the bottom than centered"*). It was
+  `padding-block-start: 188px`, taken off the Figma frame. That 188 is not arbitrary: it is
+  what centring resolves to at the frame's own height (188 + 600 + 188 = 976, plus the 64px
+  topbar = a 1040px artboard). Hard-coded, it only stays centred at exactly 1040 — at
+  Allison's 962px window it put **188 above the hero and 110 below**, which is the low-sitting
+  she spotted. `.null-state` now fills the well (`min-block-size: calc(100vh - 64px)`) and
+  centres the hero in it, so it reproduces the frame at 1040 and holds everywhere else.
+  Measured at 962: **149 / 149**.
+
+  The `padding-block: 48px` is a **floor, not spacing** — `min-block-size` is a minimum, so
+  on a well shorter than 600 + 96 the element grows past it and the padding keeps the hero
+  clear of the topbar rather than letting the top half go unreachable. Verified by simulating
+  500px and 660px wells: the hero stays 600 tall and 48px down, never clipped.
+
 - **The CTA sits ABOVE the pricing strip** (8/20). The frame puts the strip first. This also
   reads better against Sam's 8/19 pricing note — price should be last in the visual and
   informational hierarchy, and now the last thing in the column is the price, not the action.
   The copy column is a plain 32px-gap flex column, so this was a JSX reorder with no CSS.
-- **The pricing strip's "Learn more" is 12px** (`--pine-font-size-body-sm`), where the frame
-  draws it at 14px semi-bold — the same size as the strip's heading. Dropping it a step keeps
-  the strip the lightest thing on the page, which is Sam's 8/19 pricing note. Weight stays 600
-  and the strip's height is unchanged (420 × 80.5): the two-line copy block sets the height, so
-  the link shrinking doesn't move it.
+- 🔄 **The pricing strip was restyled off a reference on 8/21** (Allison: *"make the grey
+  container on the left styled like this but keep the copy I currently have"*). The reference
+  was a screenshot, so every value below was **measured out of the pixels** rather than read
+  off a spec — the method is worth knowing because the file was not Inter and not at a known
+  zoom, so absolute sizes had to be triangulated from ratios:
+
+  | | was | now | how it was measured |
+  |---|---|---|---|
+  | container border | 1px #d2d1d1 | **none** | fill goes #f0f0f0 → page in ~1px of antialiasing; no ring at any edge |
+  | heading | 14px/600 | **14px/600** (see below) | the reference reads 16px — x-height ratio to its body is 1.158 → 16/14, not 16/13 — but Allison overrode it back to 14 |
+  | body | 13px/400 | **14px/400** | ditto; also the reference's two-line copy block measures 44px, and 16 + 14 at 1.425 + the 2px gap = 44.75 |
+  | heading → body gap | 0 | **2px** | baselines sit 22px apart in the reference, ~2px more than two flush 1.425 line boxes |
+  | "Learn more" size | 12px | **14px** | the link's 'o' and the body's 'o' have the same subpixel x-height (13.2 vs 13.7 @2x) — so the link is body size, not a step under it |
+  | "Learn more" weight | 500 | **500** | the link's glyphs carry ~20% more ink than the body's at that same size — one step, i.e. medium. Set earlier the same day; the reference confirmed it |
+  | "Learn more" colour | #1a1a19 | **#4d4d4c** | sampled: link 77,77,76 vs body 78,78,77 — the link is the body's colour, not text-strong |
+
+  The fill (#f0f0f0) and the 10px radius already matched and were left alone.
+
+  **The link no longer shrinks to stay quiet — it recedes by colour instead.** That reaches the
+  same end as the 8/20 note it replaces (Sam's 8/19 "price last in the hierarchy") by a
+  different route: the link is now a peer of the body copy in size and colour, and only the
+  weight separates it.
+
+  ⚠️ **Two deliberate misses, both flagged to Allison:**
+  1. **Block padding stays 14px**, which she set earlier the same day. The reference measures
+     **~11px** — its container is 66 tall against this one's 71.9. One token to change if she
+     wants the exact proportion.
+  2. **The link stays flush right at the 16px padding** (17px inset with the transparent
+     border). The reference insets it **~27px**, 10px more than its own left padding. That
+     reads as an artifact of however that mock was built rather than intent, so it was not
+     copied.
+
+  ✅ **The heading went back to 14px the same day.** Allison, seeing it built: *"free for 30
+  days font styling should be the same as 'Keep buyers and members moving'"* — so
+  `.null-state__pricing-heading` is now declaration-for-declaration identical to
+  `.null-state__value-heading` (14px / 600 / 1.425 / #1a1a19, verified equal on all six
+  computed properties). **Keep the two in step if either moves.**
+
+  That also settles the hierarchy problem the 16px version raised: it had made the price the
+  largest type in the copy column after the H1, which worked against Sam's 8/19 note that
+  price should be **last** in the visual hierarchy. At 14/600 the strip's heading is a peer of
+  the value-prop headings and only the grey block sets it apart. Net: the strip's heading and
+  body are now the same size, and weight alone separates them — flatter than the reference,
+  quieter than the reference.
+
+  Strip is **420 × 71.9**.
 
 ### The chip measured a zero-width tab (fixed 8/20)
 
@@ -214,9 +275,11 @@ measurement or injection against a component that isn't ready yet.
    - Its heading renders **16px/400**; the design is 14px/600 (same as the value-prop titles).
    - It pads **`var(--pine-dimension-250)` = 20px** as a single shorthand on
      `.pds-alert__container`, in shadow DOM with no `part`. The design is asymmetric 16 inline
-     / 12 block (Figma `1406:64122`: 420 × 63, padding [12, 16, 12, 16], radius 10), which a
-     token override can't express — so the component adopts **one extra stylesheet into the
-     shadow root**. That is the only shadow-piercing rule on the page.
+     / 14 block (Figma `1406:64122` draws 420 × 63, padding [12, 16, 12, 16], radius 10;
+     Allison raised the block padding 12 → 14 on 8/21 for a little more air), which a token
+     override can't express — so the component adopts **one extra stylesheet into the
+     shadow root**. 14px is a literal: Pine's scale steps 12 (`dimension-150`) → 16
+     (`dimension-200`) with nothing between. That is the only shadow-piercing rule on the page.
 
      ⚠️ **That override silently failed for most of 8/20, and both reasons are worth knowing**
      — they are the strongest part of the case for exposing a `container` part or a padding
@@ -235,8 +298,17 @@ measurement or injection against a component that isn't ready yet.
         now `.pds-alert__container.pds-box` (0,2,0), which wins on specificity regardless of
         order. Preferred to `!important` because it stays overridable.
 
-     Measured after the fix: **12px block / 16px inline, strip 420 × 64.5** against the
-     frame's 63 — the 1.5 is browser line-height, not padding.
+     Measured: **14px block / 16px inline**. The strip is 420 × 74.7 as of the 8/21 restyle;
+     it was 64.5 against the frame's 63 at the frame's own 12px block — the 1.5 is browser
+     line-height, not padding — and the 8/21 +2px each side plus the bigger type accounts for
+     the rest.
+
+     ✅ **The alert's border, by contrast, needed none of this.** Removing it for the 8/21
+     restyle is a one-liner on the host — `--pine-alert-color-border: transparent` — because
+     `.pds-alert__container` re-reads that token inside the shadow root and custom properties
+     inherit through the boundary. Which is exactly the shape the padding ask above wants:
+     had padding been a token rather than a hard-coded shorthand, there would be no
+     shadow-piercing rule on this page at all.
 
    A `headingSize`/`actionsPlacement` prop, or exposing `container`/`heading` as parts, would
    remove all of this.

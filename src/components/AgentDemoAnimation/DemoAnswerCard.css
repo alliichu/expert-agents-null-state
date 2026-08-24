@@ -79,16 +79,42 @@
 }
 
 .answer-card__media {
-  block-size: 112px;
+  block-size: 180px;
   background-color: #d5d5d5;
   border-radius: 10px 10px 0 0;
+  overflow: hidden;
+}
+
+/**
+ * Figma renders the source at 348x522 and clips it to the 180px window at y=-215, so the
+ * visible band is 215 of the 342px of overflow — 62.9% down, NOT centred. `cover` plus
+ * that offset reproduces the crop exactly; plain `center` would sit 41px too high.
+ *
+ * Band grew 112 -> 180 on 8/24 (`1500:4089`), which also shifted the crop from 60.7%:
+ * the offset is a fraction of the OVERFLOW, so it moves whenever the window height does.
+ */
+.answer-card__media-img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+  object-position: 50% 62.9%;
 }
 
 .answer-card__product-body {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 8px;
   padding-inline: 16px;
+}
+
+/* Chip over title+meta, 4px apart (Figma `1500:4094`). */
+.answer-card__product-info {
+  flex: 1 1 auto;
+  min-inline-size: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .answer-card__product-titles {
@@ -116,16 +142,380 @@
 }
 
 .answer-card__cta {
-  align-self: flex-start;
+  flex: none;
 }
 
-/* Right-aligned, 12px icons, 8px apart, 8px in from the card's inner edge. */
-.answer-card__feedback {
+/**
+ * Source-citation artifact — Figma `1524:12425` / card `1526:12645`.
+ * 348 wide, radius 10, padding [12, 12, 8, 12], gap 8, children centred (which is what puts
+ * the 111px footer button at x=118.5).
+ * 12 + 104 body + 8 + 24 button + 8 = 156, the frame's height.
+ */
+.answer-card__cite {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding-inline-end: 8px;
-  /* Figma lightens these to #bbbab9 on glass (they are #6c6a69 on the white card). */
-  color: #bbbab9;
+  padding: 12px 12px 8px;
+  border-radius: 10px;
+  background-color: var(--pine-color-background-container, #fff);
 }
+
+/* Label sits 16 above the source block; the source's own parts are 8 apart. */
+.answer-card__cite-body {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.answer-card__cite-label {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 10px;
+  font-weight: var(--pine-font-weight-semi-bold);
+  line-height: 1.425;
+  color: var(--pine-color-text-subtle, #9b9a98);
+}
+
+.answer-card__cite-source {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.answer-card__cite-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 32x32 at radius 4. The frame holds a 48x32 image offset -16, i.e. the middle third of a
+   wider shot — `cover` on the pre-cropped export reproduces it. */
+.answer-card__cite-thumb {
+  flex: none;
+  inline-size: 32px;
+  block-size: 32px;
+  border-radius: 4px;
+  background-color: #d2d1d1;
+  overflow: hidden;
+}
+
+.answer-card__cite-thumb img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+/* Frame fixes this at 256 (a hug of that one string); `flex: 1` is the same visually and
+   survives a longer lesson title. */
+.answer-card__cite-title {
+  flex: 1;
+  min-inline-size: 0;
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 12px;
+  font-weight: var(--pine-font-weight-semi-bold);
+  line-height: 1.425;
+  color: var(--pine-color-text-strong, #343332);
+}
+
+.answer-card__cite-quote {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 12px;
+  font-weight: var(--pine-font-weight-regular);
+  line-height: 1.425;
+  color: var(--pine-color-text-strong, #343332);
+}
+
+/**
+ * Video-tile artifact — Figma `1519:12334` / card `1524:12559`.
+ * 348 wide, radius 10, padding [0, 0, 9, 0], gap 12.
+ * 180 thumb + 12 + 49 info + 9 = 250, the frame's own height.
+ * Thumbnail went FULL-BLEED on 8/24 (`1519:12356`) — it was inset 4px on three sides.
+ */
+.answer-card__video {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 0 0 9px;
+  border-radius: 10px;
+  background-color: var(--pine-color-background-container, #fff);
+}
+
+/* 348 x 180, flush to the card's top and sides. Top corners are 8 against the card's own
+   10 — the frame's values, and the card does not clip, so the 2px difference is what it
+   draws. Bottom corners square, since the info row sits under it. */
+.answer-card__video-thumb {
+  position: relative;
+  block-size: 180px;
+  border-radius: 8px 8px 0 0;
+  background-color: var(--pine-color-border-subtle, #e4e4e4);
+  overflow: hidden;
+}
+
+/* No object-position: exporting the image node clipped it to the frame's window, so the
+   asset is already the exact 348x180 crop (1044x540 at 3x) rather than the full still.
+   ⚠️ Re-exported on 8/24 — the baked crop is tied to the window, so it had to be pulled
+   again when the band grew and the offset moved from y=-114 to y=-104. */
+.answer-card__video-thumb img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+/**
+ * 50px disc, centred in the thumbnail. The padding is asymmetric — 13.333 left against 10
+ * right — because the frame optically centres the play triangle rather than centring its
+ * bounding box, which would read as sitting left of centre.
+ */
+.answer-card__video-play {
+  position: absolute;
+  inset-block-start: 50%;
+  inset-inline-start: 50%;
+  transform: translate(-50%, -50%);
+  box-sizing: border-box;
+  inline-size: 50px;
+  block-size: 50px;
+  padding: 11.667px 10px 11.667px 13.333px;
+  border-radius: 50%;
+  /* Fill at 75%, NOT layer opacity: `1524:12565` has nodeOpacity 1 and a paint opacity of
+     0.75, so only the disc is translucent and the white arrow stays fully opaque. Using
+     `opacity: 0.75` on the element would fade the arrow too and read dimmer over a bright
+     still. */
+  background-color: rgba(52, 51, 50, 0.75);
+  color: var(--pine-color-white, #fff);
+  display: flex;
+  align-items: center;
+}
+
+/* Centred against the title block — no longer a departure: `1524:12568` now sets
+   counterAxisAlignItems CENTER too, and draws the button at y=8.5 on a 41px block. */
+.answer-card__video-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 12px;
+}
+
+.answer-card__video-titles {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-inline-size: 0;
+}
+
+.answer-card__video-title {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 14px;
+  font-weight: var(--pine-font-weight-semi-bold);
+  line-height: 1.425;
+  color: var(--pine-color-text-strong, #1a1a19);
+}
+
+.answer-card__video-subtitle {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 13px;
+  font-weight: var(--pine-font-weight-regular);
+  line-height: 1.425;
+  color: var(--pine-color-text-readonly, #6c6a69);
+}
+
+/**
+ * Slotted trailing icons in the card's micro buttons — `Jump to 4:12` and `View details`.
+ *
+ * 🔴 Pine 3.26.4 BUG: `slot="end"` on `pds-button` never renders. The wrapper span gets
+ * `pds-button__icon--empty` whenever `hasEndContent` is false, and that flag is a plain
+ * instance field rather than reactive Stencil state — it is set by `handleEndSlotChange`,
+ * which fires AFTER the first render, so the class is computed once as empty and never
+ * corrected. Verified live: `hasEndContent === true` and the slot has one assigned element,
+ * while the wrapper still carries `--empty` and the icon lays out 0x0.
+ *
+ * ⚠️ This affects the page's main CTA too — its trailing caret is on `slot="end"`, so it is
+ * almost certainly invisible right now. Worth a look and a design-systems ticket.
+ *
+ * Sidestepped rather than pierced: the icon goes in the DEFAULT slot, landing inside
+ * `pds-button__content` after the label, which renders normally. Pine gives a slotted icon
+ * colour but neither size nor spacing (a micro button's computed `gap` is `normal`), so
+ * both come from here. A plain descendant selector reaches it because slotted children stay
+ * in the light DOM.
+ *
+ * Widths land ~4px under the frame's buttons (113.7 vs 117 for `Jump to 4:12`) because
+ * `pds-button` micro pads `2px 8px` in shipped CSS where the Figma library draws 10 —
+ * known drift, and the house rule is to follow the code.
+ */
+.answer-card pds-button pds-icon {
+  inline-size: 14px;
+  block-size: 14px;
+  margin-inline-start: 8px;
+}
+
+/* Inline bold run inside the answer — Inter Bold in the frame, not semi-bold. */
+.answer-card__strong {
+  font-weight: var(--pine-font-weight-bold, 700);
+}
+
+/**
+ * Plan-comparison table — Figma `1517:11966` / card `1517:12121`.
+ * 348 wide, radius 10, padding 12/12/8, gap 8, children centred (which is what puts the
+ * 112px footer button at x=118 in a 348 card).
+ */
+.answer-card__table {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px 8px;
+  border-radius: 10px;
+  background-color: var(--pine-color-background-container, #fff);
+}
+
+.answer-card__table-grid {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/**
+ * Columns land on the frame's own x positions: 0, 78, and a right edge of 324.
+ *
+ * The price column is FIXED at 52px, and it has to be a fixed value rather than `auto`:
+ * every row is its own grid container, so an `auto` column is sized per row — the header
+ * ("Price", 25px) ended up starting 27px right of the values (52px). A shared width is
+ * the only thing that makes the column line up across rows.
+ *
+ * 52 comes from measuring the widest price with `tabular-nums` on: 51.74. It was 50
+ * originally, taken from the first Figma cell, and that was too narrow — "$39 / mo"
+ * overflowed and wrapped, doubling the row height and throwing the divider spacing out.
+ * ⚠️ A longer price ("$129 / mo") needs this bumped.
+ */
+.answer-card__table-row {
+  display: grid;
+  align-items: center;
+  font-family: var(--pine-font-family-inter);
+  font-size: 12px;
+  font-weight: var(--pine-font-weight-regular);
+  line-height: 1.425;
+  color: var(--pine-color-text-strong, #343332);
+}
+
+/**
+ * Price column: LEFT aligned, which is what the frame actually sets on all four cells
+ * (header `1517:12158` and the three values) — not right-aligned as their bounding boxes
+ * suggest. The boxes only look right-aligned because the values HUG and the row is
+ * SPACE_BETWEEN, so they get pushed flush to 324 and their left edges land at 272 / 273 /
+ * 274 — a 2px stagger from proportional digits, present in the frame as well.
+ *
+ * `tabular-nums` removes the stagger at its source: every digit takes the same advance,
+ * so all three prices become identical widths and their `$` signs line up exactly. With
+ * that, left alignment gives a stable column start instead of one that shifts per row.
+ */
+.answer-card__table-row > :last-child {
+  text-align: left;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Plans — `1517:11966`. 54 + 24 + 1fr + 24 + 52 = 324, columns at x 0 / 78 / 272. */
+.answer-card__table-row--cols-3 {
+  grid-template-columns: 54px 1fr 52px;
+  column-gap: 24px;
+}
+
+/* Skills — `1500:4179`. Two columns, no gap: the second starts at x 224 and is 100 wide,
+   both left-aligned. Every cell in the frame measures 68 wide inside that 100. */
+.answer-card__table-row--cols-2 {
+  grid-template-columns: 1fr 100px;
+  column-gap: 0;
+}
+
+/* No footer button, so the card closes on 16px of padding instead of 8 + the 24px button
+   — Figma `1500:4179` card padding is [12, 12, 16, 12]. */
+.answer-card__table--no-footer {
+  padding-block-end: 16px;
+}
+
+/* Long `Includes` copy shortens rather than pushing the price out of the row. */
+.answer-card__table-row > :nth-child(2) {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.answer-card__table-row--head {
+  font-size: 10px;
+  font-weight: var(--pine-font-weight-semi-bold);
+  color: var(--pine-color-text-subtle, #9b9a98);
+}
+
+/**
+ * Figma's separators are LINE nodes with a centred stroke, so they contribute ZERO height
+ * to the 12px-gap stack — the rows sit at 26 / 67 / 108 with rules at 55 / 96 / 137. The
+ * negative block margins cancel the 1px box so the rule renders inside the gap instead of
+ * adding to it; without them the card comes out 3px taller than the frame.
+ */
+.answer-card__table-rule {
+  block-size: 1px;
+  margin-block: -0.5px;
+  background-color: #d2d1d1;
+}
+
+/**
+ * Email-capture artifact — Figma `1508:5456` / card `1542:18053`.
+ * 348 wide, radius 10, 12px padding, 12px gap, children right-aligned (the frame's
+ * counterAxisAlignItems is MAX, which is what puts `Send` on the right edge).
+ */
+.answer-card__form {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 10px;
+  background-color: var(--pine-color-background-container, #fff);
+}
+
+.answer-card__form-fields {
+  align-self: stretch;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.answer-card__form-label {
+  margin: 0;
+  font-family: var(--pine-font-family-inter);
+  font-size: 10px;
+  font-weight: var(--pine-font-weight-semi-bold);
+  line-height: 1.425;
+  color: var(--pine-color-text-subtle, #9b9a98);
+}
+
+/* 36 tall = 8 + a 20px line + 8. Border is #e4e4e4 INSIDE, radius 10 — not the 8 an
+   earlier pass used, and a lighter grey than the card strokes elsewhere. */
+.answer-card__form-input {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border: 1px solid var(--pine-color-border-subtle, #e4e4e4);
+  border-radius: 10px;
+  background-color: var(--pine-color-background-container, #fff);
+}
+
+.answer-card__form-value {
+  font-family: var(--pine-font-family-inter);
+  font-size: 14px;
+  font-weight: var(--pine-font-weight-regular);
+  line-height: 1.425;
+  color: var(--pine-color-text-strong, #1a1a19);
+}
+

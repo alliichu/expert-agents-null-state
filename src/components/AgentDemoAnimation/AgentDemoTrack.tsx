@@ -14,6 +14,8 @@ const LANE_PITCH = 580;
 interface AgentDemoTrackProps {
   /** the tab that should be showing */
   agent: string;
+  /** fires when the running lane's last exchange has collapsed */
+  onCycleEnd?: () => void;
 }
 
 /** Per-lane bookkeeping. `generation` is a remount key; see the switch effect. */
@@ -46,7 +48,7 @@ interface Lane {
  *                   the one that left is reset to its resting state, out of sight, so it is
  *                   clean the next time it comes back.
  */
-export function AgentDemoTrack({ agent }: AgentDemoTrackProps) {
+export function AgentDemoTrack({ agent, onCycleEnd }: AgentDemoTrackProps) {
   const index = Math.max(
     0,
     AGENT_TABS.findIndex((tab) => tab.name === agent)
@@ -99,10 +101,12 @@ export function AgentDemoTrack({ agent }: AgentDemoTrackProps) {
           key={tab.name}
           style={{ insetInlineStart: `${LANE_PITCH * i}px` }}
         >
+          {/* Only the live lane may hand over — a frozen one must not fire mid-slide. */}
           <AgentDemoAnimation
             key={lanes[i].generation}
             agent={tab.name}
             running={lanes[i].running}
+            onCycleEnd={lanes[i].running ? onCycleEnd : undefined}
           />
         </div>
       ))}

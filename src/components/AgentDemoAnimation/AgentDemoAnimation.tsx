@@ -16,6 +16,8 @@ interface AgentDemoAnimationProps {
    * middle of. Re-enabling restarts from the first prompt.
    */
   running?: boolean;
+  /** fires once the LAST exchange has finished collapsing — see `useAskSequence` */
+  onCycleEnd?: () => void;
 }
 
 /** the panel the stack is positioned inside — Figma `1406:64136`, 520 x 600. */
@@ -43,11 +45,37 @@ const CARD_GAP = 16;
  * frame back on 8/20 ("move it down so it should land right here"). So the open state is
  * pinned to the frame rather than derived.
  *
- * Pinning fixes a second thing for free: answers wrap to two or three lines (326px vs 346px
- * cards), and a centred stack moved the composer 10px between exchanges. Anchored, the
- * composer lands in the same place every time and the card's bottom edge is what floats.
+ * ⚠️ Superseded as the general rule on 8/24 — it is now the position this frame's own card
+ * height happens to produce, not a constant. See `CARD_CENTRE`.
  */
 const PREFERRED_TOP = 102;
+
+/**
+ * Where the answer card's vertical CENTRE sits, in panel space.
+ *
+ * The card's height varies a lot by artifact — an offer card is ~331, a plan table ~305, an
+ * email-capture form only ~234. Pinning the stack's TOP meant a short card hung high with a
+ * pool of empty panel beneath it (Allison, 8/24, on Jim's frame: "its too high since the
+ * card is shorter than the first state").
+ *
+ * Allison's own frames already resolve this, and they agree on a rule: the card's centre
+ * stays put and the stack rides above it. Measured off the three Sales frames —
+ *
+ *   `1500:4068` course  card 202-532.7  centre 367.4  stack top 102
+ *   `1517:11966` plans  card 215-520    centre 367.5  stack top 115
+ *   `1508:5456` capture card 245-479    centre 362    stack top 145
+ *
+ * Two of the three land on 367.4 to within a tenth of a pixel, so that is the constant; the
+ * capture frame sits 5px off it and reads as a hand nudge. Note the rule reproduces the old
+ * pinned 102 exactly for the course card, so S1 does not move.
+ *
+ * Trade-off, deliberately accepted: the open-state composer height now varies by exchange
+ * (102 / 115 / 150 across the three above) where the pinned rule held it constant. It is
+ * milder than it sounds — the composer already travels on every open, because the collapsed
+ * and thinking states are centred at 258, so this changes the DISTANCE it travels rather
+ * than introducing movement. Between exchanges it still returns to the same 258.
+ */
+const CARD_CENTRE = 367.4;
 
 /**
  * Air kept under the stack before it gives up the pinned position — Figma `1455:67300`
@@ -68,9 +96,8 @@ const MIN_TOP = 81;
  *
  * Three regimes, in order of preference:
  *
- *   fits            pinned at the frame's 102, whatever the card's height — so ordinary
- *                   content lands exactly on `1455:67300` and the composer never moves
- *                   between exchanges;
+ *   fits            centred on `CARD_CENTRE`, so the card's middle stays put and short
+ *                   cards sit lower rather than hanging high;
  *   tall            bottom-anchored: the stack lifts so the 53px of air under it survives,
  *                   which is what keeps a long answer from running off the panel;
  *   taller still    capped at MIN_TOP, and `measure` logs what would not fit.
@@ -80,8 +107,11 @@ const MIN_TOP = 81;
  * The dev warning exists so new content runs into it while it is being written rather than
  * in front of Sam.
  */
-function openTop(stackBlock: number): number {
-  return Math.max(MIN_TOP, Math.min(PREFERRED_TOP, PANEL_BLOCK - BOTTOM_MARGIN - stackBlock));
+function openTop(cardBlock: number): number {
+  const stackBlock = COMPOSER_BLOCK + CARD_GAP + cardBlock;
+  const centred = CARD_CENTRE - cardBlock / 2 - CARD_GAP - COMPOSER_BLOCK;
+  const bottomAnchored = PANEL_BLOCK - BOTTOM_MARGIN - stackBlock;
+  return Math.max(MIN_TOP, Math.min(centred, bottomAnchored));
 }
 
 /** How tall a card can be before it is clipped by the panel. ~419px. */
@@ -143,12 +173,38 @@ const prefersReducedMotion = () =>
  * together, on the same duration and curve, which holds them to each other instead. See
  * `openTop` for how the open position adapts when a card is taller than the frame's.
  */
-export function AgentDemoAnimation({ agent, running = true }: AgentDemoAnimationProps) {
+export function AgentDemoAnimation({
+  agent,
+  running = true,
+  onCycleEnd,
+}: AgentDemoAnimationProps) {
   const exchanges = useMemo(() => DEMO_EXCHANGES[agent] ?? DEMO_EXCHANGES.sales, [agent]);
   const reduced = prefersReducedMotion();
-  const { phase, index, typed } = useAskSequence(exchanges, running && !reduced);
+  const { phase, index, typed } = useAskSequence(exchanges, running && !reduced, onCycleEnd);
 
   const exchange = exchanges[index];
+
+  /**
+   * Who the visitor row names. It changes DURING the collapse (Allison, 8/24) rather
+   * than in the empty beat after it, so the answer folding away and the asker changing
+   * read as one movement instead of two.
+   *
+   * That means looking ahead: `index` does not advance until after `gap`, so through
+   * `exit` and `gap` the row already names the NEXT exchange's asker. The composer
+   * swaps to it, and by the time typing starts the new person is in place.
+   *
+   * ⚠️ NOT on the last exchange. `(index + 1) % length` wraps to 0 there, which used to
+   * flip the row back to the tab's FIRST asker during the final collapse (Allison, 8/24:
+   * "i see the name switching back to maya"). The wrap was only ever right while the
+   * loop continued inside one tab — now the tab hands over instead, so there is no next
+   * asker to look ahead to and the row holds the last one all the way out.
+   */
+  const isLastExchange = index === exchanges.length - 1;
+  const nextExchange = exchanges[(index + 1) % exchanges.length];
+  const rowVisitor =
+    !isLastExchange && (phase === 'exit' || phase === 'gap')
+      ? nextExchange.visitor
+      : exchange.visitor;
 
   /** kept through `exit` so the text can be seen backspacing out, not just vanish */
   const promptVisible = phase !== 'gap';
@@ -214,10 +270,10 @@ export function AgentDemoAnimation({ agent, running = true }: AgentDemoAnimation
       setLayout({
         slot,
         // Centred while collapsed and thinking, which is what the frames draw — `1467:67619`
-        // rests the composer at y=258.5, and (600 - 84) / 2 = 258. Open, `openTop` decides:
-        // pinned to `1455:67300` while the card fits, lifting once it doesn't.
+        // rests the composer at y=258.5, and (600 - 84) / 2 = 258. Open, `openTop` holds the
+        // card's CENTRE at `CARD_CENTRE` and lets the stack ride above it.
         top: showAnswer
-          ? openTop(COMPOSER_BLOCK + slot)
+          ? openTop(slot - CARD_GAP)
           : (PANEL_BLOCK - (COMPOSER_BLOCK + slot)) / 2,
       });
     };
@@ -252,7 +308,7 @@ export function AgentDemoAnimation({ agent, running = true }: AgentDemoAnimation
         {/* No loop, so nothing to measure: the pinned position is the right one for a
             card of ordinary height, and a very tall one would clip rather than lift. */}
         <div className="ask-demo__stack" style={{ insetBlockStart: `${PREFERRED_TOP}px` }}>
-          <DemoComposer typed={exchanges[0].prompt} agent={agent} />
+          <DemoComposer typed={exchanges[0].prompt} visitor={exchanges[0].visitor} />
           <div className="ask-demo__slot" style={{ height: 'auto' }}>
             <div className="ask-demo__layer ask-demo__layer--in">
               <DemoAnswerCard exchange={exchanges[0]} />
@@ -267,7 +323,7 @@ export function AgentDemoAnimation({ agent, running = true }: AgentDemoAnimation
     <div className="ask-demo" style={vars} aria-hidden="true" data-phase={phase}>
       <div className="ask-demo__stack" style={{ insetBlockStart: `${layout.top}px` }}>
         {/* Constant — never animates in or out; only its text changes. */}
-        <DemoComposer typed={promptVisible ? typed : ''} agent={agent} />
+        <DemoComposer typed={promptVisible ? typed : ''} visitor={rowVisitor} />
 
         <div className="ask-demo__slot" style={{ height: `${layout.slot + SHADOW_ROOM}px` }}>
           <div

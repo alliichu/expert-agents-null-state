@@ -1,16 +1,13 @@
 import { useEffect, useRef } from 'react';
-import { PdsAlert, PdsButton, PdsLink } from '@pine-ds/react';
+import { PdsAlert, PdsButton, PdsIcon, PdsLink } from '@pine-ds/react';
+import { caretRight } from '@pine-ds/icons/icons';
 import { NullStateContent } from '../../data/nullStateContent';
-import { AgentDemoPanel, DemoTransition, SwitcherVariant } from '../AgentDemoPanel/AgentDemoPanel';
+import { AgentDemoPanel } from '../AgentDemoPanel/AgentDemoPanel';
 import './ExpertAgentsNullState.css';
 
 interface ExpertAgentsNullStateProps {
   /** the version's copy — see src/data/nullStateContent.ts */
   content: NullStateContent;
-  /** which switcher treatment the demo panel draws — see App.tsx for which version uses which */
-  switcher?: SwitcherVariant;
-  /** how switching agents moves the demo — likewise per version */
-  transition?: DemoTransition;
 }
 
 /**
@@ -25,8 +22,6 @@ interface ExpertAgentsNullStateProps {
  */
 export function ExpertAgentsNullState({
   content,
-  switcher,
-  transition,
 }: ExpertAgentsNullStateProps) {
   // the Pine React wrapper forwards its ref to the underlying custom element
   const alertRef = useRef<HTMLElement>(null);
@@ -34,9 +29,10 @@ export function ExpertAgentsNullState({
   /**
    * pds-alert pads `var(--pine-dimension-250)` (20px) as a single shorthand on
    * `.pds-alert__container`, which lives in its shadow root and is exposed by no
-   * `part`. The design is asymmetric — 16 inline / 12 block (Figma `1406:64122`: 420 x 63,
-   * padding [12, 16, 12, 16], radius 10) — which a token override can't express, so this
-   * adopts one extra rule into the shadow root.
+   * `part`. The design is asymmetric — 16 inline / 14 block (Figma `1406:64122`: 420 x 63,
+   * padding [12, 16, 12, 16], radius 10; the block value was raised 12 → 14 by Allison on
+   * 8/21) — which a token override can't express, so this adopts one extra rule into the
+   * shadow root.
    *
    * Deliberately the only shadow-piercing rule on the page. Everything else the alert
    * needs is reachable through inherited custom properties — see the CSS.
@@ -81,7 +77,10 @@ export function ExpertAgentsNullState({
       sheet.replaceSync(
         '.pds-alert__container.pds-box{' +
           'padding-inline:var(--pine-dimension-200);' + // 16px
-          'padding-block:var(--pine-dimension-150);' + // 12px
+          // 16px — square with the inline padding, per `1629:63108` (8/24), which makes the
+          // strip 75 tall (16 + 43 + 16). Was a 14px literal from the 8/21 reference pass.
+          'padding-block:var(--pine-dimension-200);' + // 16px
+
           '}'
       );
       root.adoptedStyleSheets = [...root.adoptedStyleSheets, sheet];
@@ -128,7 +127,27 @@ export function ExpertAgentsNullState({
             page is the price rather than the action.
           */}
           <div className="null-state__actions">
-            <PdsButton variant="primary">{content.cta}</PdsButton>
+            {/*
+              Trailing caret (Allison, 8/21). Pine has no `chevronRight` — the shape is
+              called `caretRight` in its set, the same one the sidenav's disclosure arrows
+              use. Slotted, not the `icon` prop: that prop is deprecated and resolves a NAME
+              against the CDN set, so a bundled icon renders an empty button.
+
+              Sized explicitly because Pine's button styles a slotted `pds-icon` for colour
+              only and never for size. 14px per `1629:63108`, where the caret measures 14.
+
+              🔴 DEFAULT slot, not `slot="end"`. Pine 3.26.4 never renders an end-slotted
+              icon: the wrapper gets `pds-button__icon--empty` whenever `hasEndContent` is
+              false, and that flag is a plain instance field rather than reactive state — it
+              is set by `handleEndSlotChange`, which fires AFTER the first render, so the
+              class is computed once as empty and never corrected. Verified live: the flag
+              reads true, the slot has one assigned element, and the icon still lays out 0x0.
+              The default slot lands it inside `pds-button__content` and renders normally.
+            */}
+            <PdsButton variant="primary">
+              {content.cta}
+              <PdsIcon className="null-state__cta-icon" icon={caretRight} size="14px" />
+            </PdsButton>
           </div>
 
           {/*
@@ -147,7 +166,7 @@ export function ExpertAgentsNullState({
             <PdsLink
               slot="actions"
               className="null-state__pricing-link"
-              href="#"
+              href={content.pricing.linkHref}
               variant="plain"
             >
               {content.pricing.linkLabel}
@@ -155,7 +174,7 @@ export function ExpertAgentsNullState({
           </PdsAlert>
         </div>
 
-        <AgentDemoPanel switcher={switcher} transition={transition} />
+        <AgentDemoPanel />
       </div>
     </div>
   );

@@ -4,12 +4,26 @@
  * comment is the value that token resolves to, kept for reviewers.
  */
 
-/* Hero sits 188px below the topbar inside the 1190px content well, and the well
-   centres a 1004px column (1190 − 1004 = 186, i.e. 93px each side). */
+/* The 1004px hero is centred in the content well on both axes (the well is 1190 wide;
+   1190 − 1004 = 186, i.e. 93px each side).
+
+   Vertical centring is computed, not a fixed offset (Allison, 8/21 — *"it feels a little
+   like it's more to the bottom than centered"*). It was `padding-block-start: 188px`, read
+   off the Figma frame. 188 is not an arbitrary offset — it is what centring works out to at
+   the frame's own height (188 + 600 + 188 = 976, plus the 64px topbar = a 1040px artboard).
+   Hard-coding it only stays centred at exactly 1040; at Allison's 962px window it put 188
+   above the hero and 110 below, which is the low-sitting she noticed. Centring in the well
+   reproduces the frame at 1040 and holds at every other height.
+
+   `padding-block` is a floor, not spacing: `min-block-size` is a minimum, so on a window
+   shorter than 600 + 96 the element grows past it and the padding keeps the hero off the
+   topbar instead of the top half going unreachable. */
 .null-state {
   display: flex;
+  align-items: center;
   justify-content: center;
-  padding-block-start: 188px;
+  min-block-size: calc(100vh - var(--sidebar-offset)); /* 64px topbar */
+  padding-block: var(--pine-dimension-600); /* 48px */
 }
 
 .null-state__hero {
@@ -99,6 +113,16 @@
   color: var(--pine-color-text-readonly); /* Figma `color/text/readonly` */
 }
 
+/* Pine gives a slotted `pds-icon` colour but neither size nor spacing, and a button's
+   computed `gap` is `normal`, so both come from here. 14px icon + 8px gap = the frame's
+   188px button (16 + 134 label + 8 + 14 + 16). Slotted children stay in the light DOM,
+   so a plain descendant selector reaches it. */
+.null-state__cta-icon {
+  inline-size: 14px;
+  block-size: 14px;
+  margin-inline-start: 8px;
+}
+
 .null-state__actions {
   display: flex;
   align-items: center;
@@ -117,18 +141,43 @@
  */
 .null-state__pricing {
   inline-size: 100%;
+
+  /* No rule around the strip (Allison's reference, 8/21 — measured: the fill goes straight
+     from #f0f0f0 to the page with nothing but antialiasing between). Pine draws the alert's
+     1px #d2d1d1 border from `--pine-alert-color-border`, and `.pds-alert__container`
+     re-reads that token inside its shadow root, so a custom property on the host is enough
+     — no second shadow-piercing rule. The 1px border box is kept, transparent, so Pine's
+     own metrics are untouched and the fill paints under it. */
+  --pine-alert-color-border: transparent;
 }
 
 /* Slotted content is light DOM, so it styles normally. `small` puts it inside a
-   truncating pds-text, hence the white-space reset. */
+   truncating pds-text, hence the white-space reset.
+
+   The 2px gap is measured off the reference: heading and body baselines sit 22px apart
+   there, which is ~2px more than the two 1.425 line boxes stacked flush. It was measured
+   against the reference's larger heading; kept at 14px because the breath between the two
+   lines is what it was doing, not the size difference. */
 .null-state__pricing-copy {
   display: flex;
   flex-direction: column;
+  gap: 4px;
   white-space: normal;
   overflow: visible;
 }
 
-/* 14px semi-bold — the same style as the value-prop headings above. */
+/* Identical to `.null-state__value-heading` — 14px semi-bold, 1.425, #1a1a19 (Allison,
+   8/21: *"free for 30 days font styling should be the same as 'Keep buyers and members
+   moving'"*). Keep the two in step if either moves.
+
+   This overrides the reference, which draws the strip's heading a step above its body
+   (x-height ratio 1.158 → 16/14). It also settles the hierarchy question that raised: at
+   16px the price was the biggest type in the column after the H1, which worked against
+   Sam's 8/19 note that price should be LAST in the visual hierarchy. At 14/600 the strip's
+   heading is now a peer of the value-prop headings, and only the grey block sets it apart.
+
+   `--pine-color-text-strong` and the value heading's `--pine-color-grey-950` both resolve
+   to #1a1a19; the token names differ because that one is quoting a Figma token. */
 .null-state__pricing-heading {
   font-size: var(--pine-font-size-body-md); /* 14px */
   font-weight: var(--pine-font-weight-semi-bold);
@@ -136,8 +185,9 @@
   color: var(--pine-color-text-strong); /* #1a1a19 */
 }
 
-/* Figma specifies 13px. Pine's scale steps 14px (body-md) → 12px (body-sm) with no
-   13px token, so this is a literal — worth raising with design systems. */
+/* 13px — back to the frame's size (`1629:63108`, 8/24), reversing the 8/21 reference pass
+   that had put it on `body-md`. Pine has no 13px token, so it is a literal again and the
+   page carries one off-scale size. Worth raising with design systems. */
 .null-state__pricing-body {
   font-size: 13px;
   font-weight: var(--pine-font-weight-regular);
@@ -145,11 +195,19 @@
   color: var(--pine-color-text-secondary); /* #4d4d4c */
 }
 
-/* 12px (Allison, 8/20) — the frame's link is 14px, matching the heading; dropped a step so
-   the link sits under the pricing copy in hierarchy rather than level with the heading. */
+/* Reference treatment (Allison, 8/21): the link is a PEER of the body copy, not of the
+   heading — same size, same colour, one weight step heavier. All three were measured off
+   the reference rather than guessed:
+     • size    — the link's 'o' and the body's 'o' have the same x-height (13.2 vs 13.7 @2x),
+                 so the link is body size, i.e. 14px. It was 12px (8/20).
+     • weight  — the link's glyphs carry ~20% more ink than the body's at that same size,
+                 which is one step, i.e. medium. Already set 8/21; unchanged.
+     • colour  — sampled #4d4d4c on the reference, the body's colour, not text-strong.
+   Net effect is the same intent as the 8/20 note it replaces (keep the strip the lightest
+   thing on the page, per Sam's 8/19 pricing note) reached with colour instead of size. */
 .null-state__pricing-link::part(link) {
   font-size: var(--pine-font-size-body-sm); /* 12px */
-  font-weight: var(--pine-font-weight-semi-bold);
-  color: var(--pine-color-text-strong);
+  font-weight: var(--pine-font-weight-medium); /* 500 */
+  color: var(--pine-color-text-strong); /* #1a1a19 */
   text-decoration: none;
 }

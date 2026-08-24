@@ -12,9 +12,14 @@
 
 export const TIMING = {
   /** per character while the prompt types in */
-  charMs: 45,
-  /** beat after the last character, before the thinking state appears below */
-  afterTypedMs: 700,
+  /* 45 -> 35 -> 30 on 8/24 (Allison, twice: "a little bit quicker"). Shortens the typing
+     of the loop, which `phaseDuration` derives as promptLength * charMs + afterTypedMs. */
+  charMs: 30,
+  /** Beat after the last character, before the thinking state appears below.
+      700 -> 400 on 8/24 (Allison: make the "<Agent> thinking..." line appear faster).
+      At 700 this dead pause was longer than half the typing itself once charMs came
+      down to 30, which is what made the front of the loop feel slow. */
+  afterTypedMs: 400,
   /** agent is thinking */
   thinkingMs: 2000,
   /** the "Thinking..." label fading in, and back out as the answer takes its place */
@@ -29,9 +34,15 @@ export const TIMING = {
   holdMs: 3400,
   /** per character while the prompt backspaces out — faster than typing, as real
       backspacing is, but not instant */
-  deleteCharMs: 16,
+  deleteCharMs: 10,
   /** floor for the collapse; the real length also has to cover the backspacing */
-  exitMs: 600,
+  exitMs: 540,
+  /**
+   * Beat between the last character backspacing out and the exit phase ending. Was a
+   * literal 240 buried inside `phaseDuration`, which broke this file's own rule that
+   * every number controlling feel lives in TIMING — and made the exit untunable.
+   */
+  exitTailMs: 160,
   /**
    * The card's FADE on the way out — deliberately much shorter than the collapse it
    * happens inside (Allison, 8/20: "there's this weird fade at the very end that lingers").
@@ -46,9 +57,26 @@ export const TIMING = {
    * (`EASING.exitFade`) is constant-rate, so changing the number changes only how long the
    * fade takes, not its character.
    */
-  exitFadeMs: 400,
+  exitFadeMs: 280,
   /** empty beat before the next prompt starts typing */
-  gapMs: 600,
+  gapMs: 400,
+  /**
+   * How far into the answer card's collapse the visitor label swaps to the next asker.
+   *
+   * Each exchange is a different business with a different asker, so the name and context
+   * change every loop, and changing them on the frame reads as a glitch (Allison, 8/24).
+   * There is NO fade: the row holds full opacity at all times. The swap is hidden by
+   * timing instead — it lands while the answer card is folding away and the prompt is
+   * backspacing, which is the largest movement in the loop, so the eye is elsewhere.
+   *
+   * Two earlier passes were wrong: fading the whole row out made it vanish, and dipping
+   * just the label still dropped below full opacity. The row is documented as present and
+   * unchanging through every transition — it is the one fixed thing anchoring the composer
+   * while everything below it opens and closes.
+   *
+   * Must stay under `exitMs` so the new asker is in place before the empty beat.
+   */
+  visitorSwapMs: 240,
   /**
    * How long the agent switch takes to slide one lane out and the next one in — Figma
    * `1483:68475`, where the content sits on a track and translates 580px per switch.
@@ -58,7 +86,10 @@ export const TIMING = {
    * starts typing, so the number lives here and the track publishes it to CSS — the two
    * cannot drift.
    */
-  switchMs: 520,
+  /* Tuned 520 -> 400 on 8/24 (Allison: "a little bit faster"). One dial now moves both
+     the chip and the content track, and it is also the beat the incoming lane waits
+     out before it starts typing, so the whole switch tightened together. */
+  switchMs: 400,
 } as const;
 
 /**
@@ -115,7 +146,10 @@ export function phaseDuration(phase: Phase, promptLength: number): number {
       return TIMING.holdMs;
     case 'exit':
       // long enough to backspace the whole prompt, with a beat after the last character
-      return Math.max(TIMING.exitMs, promptLength * TIMING.deleteCharMs + 240);
+      return Math.max(
+        TIMING.exitMs,
+        promptLength * TIMING.deleteCharMs + TIMING.exitTailMs,
+      );
     case 'gap':
       return TIMING.gapMs;
   }
