@@ -6,8 +6,8 @@ surface instead of a utility empty state.
 It shows behaviour and pixel intent. Values were pulled from `kajabi-products` and the Figma
 frames rather than eyeballed, so it can be used as the spec.
 
-- **Figma:** Alli's Sketchbook → `↳ Scratchpad - null state` — left column `1629:63108`,
-  demo frames in section `1500:4067`
+- **Figma:** Alli's Sketchbook → page **`↳ Null State [WIP 🚧]`** (`1629:62411`) — the dev file
+  for this state. Exploration and earlier passes live on `↳ Scratchpad - null state`.
 - **Deeper detail:** [BUILD-NOTES.md](./BUILD-NOTES.md) — version pins, provenance, Pine
   findings, gotchas
 
@@ -72,34 +72,6 @@ purchase page which is confusing."*
 
 ---
 
-## What isn't real yet
-
-The demo content is designed and reviewed, built from Isabelle's classified production data
-(n = 3,001 Teaching / n = 81 Sales openings). Six different businesses on purpose — the point is
-that it works whatever you sell, so don't consolidate them onto one creator.
-
-But **three of the six artifacts don't exist in the chat today**:
-
-| Artifact | Exchange | |
-|---|---|---|
-| Offer card | S1 course | ✅ `OfferCard` + `ShowOffer` |
-| Video tile | T2 warm-ups | ✅ `VideoTile` — but shipped as a 120×68 row, not this large card |
-| Source citation | T3 photos | ✅ `SourceCitationCard` — but no excerpt field, so the pull quote is net-new |
-| Email capture form | S2 updates | ❌ **net-new** |
-| Plan table | S3 pricing | ❌ **net-new** |
-| Skills table | T1 skills | ❌ **net-new** |
-
-**On the capture form:** lead capture has no frontend at all. `LeadCapture::Create` is a tool the
-LLM calls *after* the visitor types an email into the ordinary composer, and the ask is prose in
-the hero's own wording. The capability is real — it creates a Contact stamped
-`sales_agent_visitor` — but the field is a design proposal. It also fires nothing downstream
-(`FLEX-3806` is still a TODO), so copy must not promise a triggered send.
-
-**On the plans table:** keep it three rows, three columns. A feature matrix turns it into the
-pricing-page section Sam killed on 8/18.
-
----
-
 ## Structure
 
 ```
@@ -117,18 +89,3 @@ src/
 One exchange draws exactly one artifact, or none — a discriminated union rather than five
 optional fields, so it can't carry both a table and a video. Omitting it is a real shape: not
 every question resolves to an artifact, and it's how to buy height back for a longer answer.
-
----
-
-## Open questions
-
-1. **Agent naming.** The tabs put both names on screen at 12px and nobody has picked them — code
-   says `SalesAssistant` / `TeachingAssistant`, designs say "Sales Agent".
-2. **Will the three net-new artifacts be built?** S2's is the strongest ask: creators selling live
-   or coaching products have no artifact at all today.
-3. **Is `ratings_enabled` honoured in the member chat frontend?** It defaults OFF for Sales and ON
-   for Teaching (`ai/chatbot/settings.rb:67`), but the wiring wasn't found. The message footer
-   (thumbs + copy) is removed here while that's unresolved.
-4. **Can a pre-purchase account run a live agent?**
-5. ~13% of Sales-agent openings are existing customers asking how to access what they bought — a
-   support question hitting the sales widget, which by its own boundaries has to deflect.

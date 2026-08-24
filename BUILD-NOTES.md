@@ -5,6 +5,36 @@ deviations, Pine findings for the design-systems team, and the gotchas that cost
 
 Not needed to understand what the page does; see the README for that.
 
+## Which artifacts are net-new components
+
+The demo content is designed and reviewed, built from Isabelle's classified production data
+(n = 3,001 Teaching / n = 81 Sales openings). Six different businesses on purpose — the point is
+that it works whatever you sell, so don't consolidate them onto one creator.
+
+But **three of the six artifacts don't exist in the chat today**:
+
+| Artifact | Exchange | |
+|---|---|---|
+| Offer card | S1 course | ✅ `OfferCard` + `ShowOffer` |
+| Video tile | T2 warm-ups | ✅ `VideoTile` — but shipped as a 120×68 row, not this large card |
+| Source citation | T3 photos | ✅ `SourceCitationCard` — but no excerpt field, so the pull quote is net-new |
+| Email capture form | S2 updates | ❌ **net-new** |
+| Plan table | S3 pricing | ❌ **net-new** |
+| Skills table | T1 skills | ❌ **net-new** |
+
+**On the capture form:** lead capture has no frontend at all. `LeadCapture::Create` is a tool the
+LLM calls *after* the visitor types an email into the ordinary composer, and the ask is prose in
+the hero's own wording. The capability is real — it creates a Contact stamped
+`sales_agent_visitor` — but the field is a design proposal. It also fires nothing downstream
+(`FLEX-3806` is still a TODO), so copy must not promise a triggered send.
+
+**On the plans table:** keep it three rows, three columns. A feature matrix turns it into the
+pricing-page section Sam killed on 8/18.
+
+---
+
+---
+
 ## Pinned to the monorepo
 
 Versions match `kajabi-products/package.json` at `1a312ca09ed` (2026-06-23):
