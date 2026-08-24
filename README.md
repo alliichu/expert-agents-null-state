@@ -54,19 +54,14 @@ the prompt if that or the panel height is exceeded.
 ## Links and states
 
 `Learn more` → [Expert Agents overview](https://help.kajabi.com/articles/products/products-overview/expert-agents-overview).
-Worth confirming that's the destination product wants; it's the public overview page.
 
-`Add your first agent` isn't wired, because its target depends on the state. There are **three**,
-where today's code has two (behind `expert_agents_self_serve_creation_enabled`):
+**The CTA is always `Add your first agent`.** Same label, same page, both states.
 
-| State | Page | CTA |
-|---|---|---|
-| Not purchased | what's built here | payment |
-| **Purchased, not set up** | same page **minus the pricing strip** | creation |
-| Flag off | today's "Request an agent" Typeform | Typeform |
+The only difference is the **pricing strip**: if the account already has an agent available,
+the "Free for 30 days" container isn't shown, and the CTA leads to the creation page rather
+than payment. Neither target is wired here.
 
-The middle one is Isabelle's (8/21) and is **not built** — *"right now it still shows them the
-purchase page which is confusing."*
+That second state isn't built in this prototype — it's the same page minus one container.
 
 ---
 
