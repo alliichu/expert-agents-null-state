@@ -7,9 +7,7 @@ It shows behaviour and pixel intent. Values were pulled from `kajabi-products` a
 frames rather than eyeballed, so it can be used as the spec.
 
 - **Figma:** Alli's Sketchbook → page **`↳ Null State [WIP 🚧]`** (`1629:62411`) — the dev file
-  for this state. Exploration and earlier passes live on `↳ Scratchpad - null state`.
-- **Deeper detail:** [BUILD-NOTES.md](./BUILD-NOTES.md) — version pins, provenance, Pine
-  findings, gotchas
+  for this state. 
 
 ```bash
 npm install     # .npmrc sets legacy-peer-deps (Pine peers react@^18; we pin 17 like prod)
