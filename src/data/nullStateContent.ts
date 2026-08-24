@@ -56,8 +56,6 @@ export const NULL_STATE_V1: NullStateContent = {
   ],
   pricing: {
     heading: 'Free for 30 days',
-    // ⚠️ UNVERIFIED — the $49 figure has no pricing sign-off. See the pod CLAUDE.md
-    // "Product truth" section before this goes anywhere near a real account.
     body: '$49/mo per agent after that',
     linkLabel: 'Learn more',
     // Real published article, found 8/24 — not a guessed slug. Devs should confirm this is
